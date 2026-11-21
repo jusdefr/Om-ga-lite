@@ -1,0 +1,131 @@
+diff --git a/apps/main.cpp b/apps/main.cpp
+index b73b73e..22e53b0 100644
+--- a/apps/main.cpp
++++ b/apps/main.cpp
+@@ -1,6 +1,7 @@
+ #include "apps_container.h"
+ #include "global_preferences.h"
+ #include <poincare/init.h>
++#include "settings/custom_colors/custom_colors_runtime.h"
+ 
+ #define DUMMY_MAIN 0
+ #if DUMMY_MAIN
+@@ -28,6 +29,9 @@ void ion_main(int argc, const char * const argv[]) {
+   // Initialize Poincare::TreePool::sharedPool
+   Poincare::Init();
+ 
++  /* Omega Lite: apply the saved color palette before the first frame. */
++  OmegaLite::Colors::loadAtStartup();
++
+ #if EPSILON_GETOPT
+   for (int i=1; i<argc; i++) {
+     if (argv[i][0] != '-' || argv[i][1] != '-') {
+diff --git a/apps/settings/Makefile b/apps/settings/Makefile
+index 588b95c..85ce622 100644
+--- a/apps/settings/Makefile
++++ b/apps/settings/Makefile
+@@ -1,4 +1,6 @@
+ apps += Settings::App
++
++include apps/settings/custom_colors/Makefile
+ app_headers += apps/settings/app.h
+ 
+ app_settings_src = $(addprefix apps/settings/,\
+@@ -29,6 +31,7 @@ app_settings_src = $(addprefix apps/settings/,\
+ SFLAGS += -DOMEGA_STATE="$(OMEGA_STATE)"
+ 
+ app_settings_src += $(app_settings_test_src)
++app_settings_src += $(app_settings_custom_colors_src)
+ apps_src += $(app_settings_src)
+ 
+ i18n_files += $(call i18n_without_universal_for,settings/base)
+diff --git a/apps/settings/main_controller.cpp b/apps/settings/main_controller.cpp
+index 6b65f15..f71eab6 100644
+--- a/apps/settings/main_controller.cpp
++++ b/apps/settings/main_controller.cpp
+@@ -33,7 +33,8 @@ MainController::MainController(Responder * parentResponder, InputEventHandlerDel
+   m_dateTimeController(this),
+   m_examModeController(this),
+   m_aboutController(this),
+-  m_preferencesController(this)
++  m_preferencesController(this),
++  m_customColorsController(this, &OmegaLite::Colors::settings())
+ {
+   for (int i = 0; i < k_numberOfSimpleChevronCells; i++) {
+     m_cells[i].setMessageFont(KDFont::LargeFont);
+@@ -89,6 +90,12 @@ bool MainController::handleEvent(Ion::Events::Event event) {
+     }
+   }
+   if (event == Ion::Events::OK || event == Ion::Events::EXE || event == Ion::Events::Right) {
++    if (model()->childAtIndex(selectedRow())->label() == I18n::Message::CustomColors) {
++      /* Omega Lite: the color page is not a SettingsMessageTree based
++       * sub controller, it owns its view and its storage. */
++      stackController()->push(&m_customColorsController);
++      return true;
++    }
+     GenericSubController * subController = nullptr;
+     I18n::Message title = model()->childAtIndex(selectedRow())->label();
+     if (title == I18n::Message::Brightness || title == I18n::Message::Language) {
+diff --git a/apps/settings/main_controller.h b/apps/settings/main_controller.h
+index fd638a0..288f4da 100644
+--- a/apps/settings/main_controller.h
++++ b/apps/settings/main_controller.h
+@@ -11,6 +11,8 @@
+ #include "sub_menu/localization_controller.h"
+ #include "sub_menu/math_options_controller.h"
+ #include "sub_menu/preferences_controller.h"
++#include "custom_colors/custom_colors_controller.h"
++#include "custom_colors/custom_colors_runtime.h"
+ 
+ namespace Settings {
+ 
+@@ -73,6 +75,7 @@ private:
+   ExamModeController m_examModeController;
+   AboutController m_aboutController;
+   PreferencesController m_preferencesController;
++  OmegaLite::Colors::CustomColorsController m_customColorsController;
+ };
+ 
+ }
+diff --git a/apps/settings/main_controller_prompt_beta.cpp b/apps/settings/main_controller_prompt_beta.cpp
+index b462cc1..157ec1d 100644
+--- a/apps/settings/main_controller_prompt_beta.cpp
++++ b/apps/settings/main_controller_prompt_beta.cpp
+@@ -16,7 +16,8 @@ constexpr SettingsMessageTree s_modelMenu[] =
+     SettingsMessageTree(I18n::Message::ExamMode, ExamModeConfiguration::s_modelExamChildren),
+     SettingsMessageTree(I18n::Message::BetaPopUp),
+     SettingsMessageTree(I18n::Message::About, s_modelAboutChildren),
+-    SettingsMessageTree(I18n::Message::Accessibility, s_accessibilityChildren)};
++    SettingsMessageTree(I18n::Message::Accessibility, s_accessibilityChildren),
++    SettingsMessageTree(I18n::Message::CustomColors)};
+ 
+ constexpr SettingsMessageTree s_model = SettingsMessageTree(I18n::Message::SettingsApp, s_modelMenu);
+ 
+diff --git a/apps/settings/main_controller_prompt_none.cpp b/apps/settings/main_controller_prompt_none.cpp
+index 965fffe..fe3873d 100644
+--- a/apps/settings/main_controller_prompt_none.cpp
++++ b/apps/settings/main_controller_prompt_none.cpp
+@@ -15,7 +15,8 @@ constexpr SettingsMessageTree s_modelMenu[] =
+     SettingsMessageTree(I18n::Message::ExamMode, ExamModeConfiguration::s_modelExamChildren),
+     SettingsMessageTree(I18n::Message::FontSizes, s_modelFontChildren),
+     SettingsMessageTree(I18n::Message::Accessibility, s_accessibilityChildren),
+-    SettingsMessageTree(I18n::Message::About, s_modelAboutChildren)};
++    SettingsMessageTree(I18n::Message::About, s_modelAboutChildren),
++    SettingsMessageTree(I18n::Message::CustomColors)};
+ 
+ constexpr SettingsMessageTree s_model = SettingsMessageTree(I18n::Message::SettingsApp, s_modelMenu);
+ 
+diff --git a/apps/settings/main_controller_prompt_update.cpp b/apps/settings/main_controller_prompt_update.cpp
+index 3c74faf..95770e0 100644
+--- a/apps/settings/main_controller_prompt_update.cpp
++++ b/apps/settings/main_controller_prompt_update.cpp
+@@ -16,7 +16,8 @@ constexpr SettingsMessageTree s_modelMenu[] =
+     SettingsMessageTree(I18n::Message::ExamMode, ExamModeConfiguration::s_modelExamChildren),
+     SettingsMessageTree(I18n::Message::UpdatePopUp),
+     SettingsMessageTree(I18n::Message::Accessibility, s_accessibilityChildren),
+-    SettingsMessageTree(I18n::Message::About, s_modelAboutChildren)};
++    SettingsMessageTree(I18n::Message::About, s_modelAboutChildren),
++    SettingsMessageTree(I18n::Message::CustomColors)};
+ 
+ constexpr SettingsMessageTree s_model = SettingsMessageTree(I18n::Message::SettingsApp, s_modelMenu);
+ 

@@ -1,0 +1,150 @@
+{
+    "name": "Omega Lite",
+    "icons": "epsilon_dark",
+    "colors": {
+        "PrimaryText": "eef4ff",
+        "SecondaryText": "9fb0cc",
+        "AccentText": "2fd3c4",
+        "ApproximateSignText": "8fa1bd",
+        "ApproximateExpressionText": "8fa1bd",
+        "Background": {
+            "Hard": "0b1220",
+            "Apps": "111a2b",
+            "AppsSecondary": "1b2740"
+        },
+        "Toolbar": {
+            "": "2fd3c4",
+            "Text": "07131f"
+        },
+        "ExpressionInput": {
+            "Background": "0b1220",
+            "Border": "26354f"
+        },
+        "Grid": {
+            "PrimaryLine": "2a3b57",
+            "SecondaryLine": "1a2740"
+        },
+        "Battery": {
+            "": "1b2740",
+            "InCharge": "2fd3c4",
+            "Low": "ff5a6e"
+        },
+        "ScrollBar": {
+            "Foreground": "9fb0cc",
+            "Background": "26354f"
+        },
+        "Control": {
+            "": "2fd3c4",
+            "Enabled": "2fd3c4",
+            "Disabled": "55657d"
+        },
+        "Calculation": {
+            "BackgroundOdd": "111a2b",
+            "BackgroundEven": "0b1220",
+            "EmptyBox": "1b2740",
+            "EmptyBoxNeeded": "2fd3c4",
+            "TrigoAndComplexForeground": "ff7a9c"
+        },
+        "Code": {
+            "Background": "0b1220",
+            "BackgroundSelected": "25405f",
+            "Text": "eef4ff",
+            "Comment": "7f91ad",
+            "Number": "2fd3c4",
+            "Keyword": "ff7a9c",
+            "Operator": "b9a0ff",
+            "String": "7fd8ff",
+            "GutterViewBackground": "111a2b"
+        },
+        "Probability": {
+            "Curve": "2fd3c4",
+            "CellBorder": "26354f",
+            "HistogramBar": "2a3b57"
+        },
+        "Statistics": {
+            "Box": "2fd3c4",
+            "BoxVerticalLine": "26354f",
+            "Selected": "2fd3c4",
+            "NotSelected": "26354f"
+        },
+        "Graph": {
+            "Tangent": "9fb0cc"
+        },
+        "SubMenu": {
+            "Background": "111a2b",
+            "Border": "26354f",
+            "Text": "9fb0cc"
+        },
+        "Toolbox": {
+            "HeaderBackground": "2a3b57",
+            "HeaderText": "eef4ff",
+            "HeaderBorder": "26354f",
+            "Background": "111a2b"
+        },
+        "List": {
+            "CellBackground": "111a2b",
+            "CellBackgroundSelected": "25405f",
+            "CellBorder": "26354f"
+        },
+        "Button": {
+            "Background": "1b2740",
+            "BackgroundSelected": "25405f",
+            "BackgroundSelectedHighContrast": "2fd3c4",
+            "Border": "3a4e6e",
+            "RowBorder": "26354f",
+            "BorderOut": "0b1220",
+            "Shadow": "0b1220",
+            "Text": "eef4ff"
+        },
+        "Tab": {
+            "Background": "111a2b",
+            "BackgroundSelected": "25405f",
+            "BackgroundActive": "0b1220",
+            "BackgroundSelectedAndActive": "1b2740",
+            "Text": "9fb0cc",
+            "TextActive": "2fd3c4"
+        },
+        "SubTab": {
+            "Background": "0b1220",
+            "BackgroundSelected": "25405f",
+            "Text": "eef4ff"
+        },
+        "Banner": {
+            "FirstBackground": "2a3b57",
+            "FirstBorder": "2a3b57",
+            "FirstText": "eef4ff",
+            "FirstVariantBackground": "1b2740",
+            "FirstVariantBorder": "1b2740",
+            "FirstVariantText": "eef4ff",
+            "SecondBackground": "1b2740",
+            "SecondBorder": "1b2740",
+            "SecondText": "eef4ff"
+        },
+        "Home": {
+            "Background": "0b1220",
+            "CellBackground": "111a2b",
+            "CellBackgroundActive": "2fd3c4",
+            "CellText": "eef4ff",
+            "CellTextActive": "07131f",
+            "CellTextExternal": "7fd8ff",
+            "CellTextExternalActive": "2fd3c4"
+        },
+        "Atom": {
+            "Unknown": "2c2c39",
+            "Text": "eef4ff",
+            "AlkaliMetal": "b15a3b",
+            "AlkaliEarthMetal": "fb3d19",
+            "Lanthanide": "157305",
+            "Actinide": "0f3b08",
+            "TransitionMetal": "1b1bb1",
+            "PostTransitionMetal": "62090a",
+            "Metalloid": "daa811",
+            "Halogen": "84abe3",
+            "ReactiveNonmetal": "fb7b19",
+            "NobleGas": "348989",
+            "TableLines": "323532",
+            "Highlight": "000000",
+            "Background": "d9d9d9"
+        }
+    }
+}

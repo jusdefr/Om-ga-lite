@@ -1,0 +1,18 @@
+# Build output
+build/
+*.o
+*.elf
+*.dfu
+*.bin
+
+# Generated archives
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store

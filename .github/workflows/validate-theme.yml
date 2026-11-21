@@ -1,0 +1,37 @@
+name: Validate theme and tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  theme:
+    name: Theme and tools
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate the Omega Lite theme
+        run: python3 scripts/validate_theme.py --check-roles themes/omega_lite.json
+      - name: Check the generated default palette is up to date
+        run: python3 scripts/generate_palette_defaults.py --check
+      - name: Run the tooling tests
+        run: python3 -m unittest discover -s tests/python -v
+      - name: Render the preview and check contrast
+        run: >-
+          python3 scripts/preview_palette.py themes/omega_lite.json
+          --output build/preview/omega_lite.png --min-contrast 3.0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: omega-lite-preview
+          path: build/preview/omega_lite.png
+
+  host-tests:
+    name: C++ host tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and run the tests
+        run: make -C tests/host
