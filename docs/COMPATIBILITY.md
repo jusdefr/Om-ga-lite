@@ -37,9 +37,12 @@ Vérifié directement dans le dépôt `Omega-Numworks/Omega` (commit `b06f3a1`,
 - Il n'y a donc ni mapping mémoire, ni driver d'écran/clavier, ni cible de
   compilation N0120 dans Omega.
 
-Le thème Omega est par ailleurs appliqué **à la compilation** : `Palette::` est
-un ensemble de constantes `constexpr` générées par `themes/themes_manager.py`
-(617 usages dans 163 fichiers). Changer de thème impose de recompiler.
+Dans Omega d'origine, le thème est appliqué **à la compilation** : `Palette::`
+est un ensemble de constantes `constexpr` générées par
+`themes/themes_manager.py`. Omega Lite remplace ce générateur par une version
+runtime (`scripts/generate_runtime_palette.py`) et convertit les quelques
+usages qui exigeaient une constante de compilation ; c'est une modification du
+code d'Omega, pas un contournement de la machine.
 
 ## 3. Pourquoi aucun firmware tiers ne démarre sur N0120
 
@@ -61,16 +64,20 @@ un ensemble de constantes `constexpr` générées par `themes/themes_manager.py`
 **Affirmé et vérifié :**
 
 - Le module compile syntaxiquement contre les en-têtes réels d'Omega
-  (`scripts/check_omega_syntax.sh`, 13/13 sources, 0 erreur).
+  (`scripts/check_omega_syntax.sh`, 14/14 sources, C++11, 0 erreur).
 - Le thème est accepté par le moteur de thèmes d'Omega, qui en produit un
   `palette.h` valide.
-- Les tests du cœur portable passent (42 fonctions, 16 877 vérifications).
-- Le patch d'intégration s'applique sur un clone neuf d'Omega.
+- Les tests du cœur portable passent (44 fonctions, 16 893 vérifications) et
+  les tests Python aussi (38 tests).
+- Le patch d'intégration (18 fichiers) s'applique sur un clone neuf d'Omega.
+- Le **simulateur Linux complet** se compile et se lie avec Omega Lite
+  (`epsilon.bin`), apps `calculation` et `settings` incluses.
 
 **Non affirmé :**
 
 - Qu'Omega Lite démarre sur une N0120.
-- Qu'un firmware compilé ici fonctionne (aucune compilation ARM n'a été faite).
+- Qu'un firmware ARM fonctionne : seule la compilation du **simulateur** a été
+  réalisée, aucune image `.dfu` n'a été produite.
 - Qu'une méthode d'installation N0120 existe ou soit en préparation.
 
 ## 5. Ce qui changerait la conclusion

@@ -4,14 +4,17 @@
 
 Pour le module et les outils (ce qui a été exécuté dans cet environnement) :
 
-- `git`, `make`, `g++` (C++17), `python3` ≥ 3.8.
+- `git`, `make`, `g++` (le code est compilé en **C++11**, comme Omega),
+  `python3` ≥ 3.8.
 
-Pour compiler Omega (non exécuté ici) :
+Pour le simulateur Omega (exécuté ici) :
 
-- la chaîne `arm-none-eabi-gcc` ;
-- les sous-modules d'Omega (`git clone --recursive`) ;
-- pour le simulateur : `clang`, SDL2 et les dépendances graphiques ;
-- voir le README d'Omega pour les versions exactes.
+- `freetype2` et `libpng` (rasterizer de polices et `escher/image/inliner`) ;
+- les en-têtes X11, Xext, Xrandr, Xi, Xcursor, Xinerama, Xss, xkbcommon et
+  libjpeg (`SDL` et `platform_images`).
+
+Pour le firmware ARM (non exécuté ici) : la chaîne `arm-none-eabi-gcc` et les
+sous-modules d'Omega (`git clone --recursive`).
 
 ## 1. Récupérer les deux dépôts
 
@@ -31,8 +34,11 @@ Le script :
 
 1. copie `apps/settings/custom_colors/` dans Omega ;
 2. copie `themes/omega_lite.json` dans `themes/themes/local/` ;
-3. vérifie (`git apply --check`) puis applique `integration/omega_lite_settings.patch` ;
-4. ajoute la traduction `CustomColors` aux 8 langues via
+3. copie `scripts/generate_runtime_palette.py` (appelé par le `Makefile`
+   d'escher patché) ;
+4. vérifie (`git apply --check`) puis applique `integration/omega_lite_settings.patch`
+   (18 fichiers) ;
+5. ajoute la traduction `CustomColors` aux 8 langues via
    `scripts/add_i18n_messages.py`.
 
 Il échoue explicitement si un fichier d'Omega a changé de structure : c'est
@@ -54,13 +60,20 @@ make -C ../Omega -j4 THEME_REPO=local THEME_NAME=omega_lite
 Le firmware par défaut d'Omega cible **N0110**. Pour le simulateur :
 
 ```sh
-make -C ../Omega -j4 PLATFORM=simulator THEME_REPO=local THEME_NAME=omega_lite
+make -C ../Omega -j4 PLATFORM=simulator EPSILON_APPS="calculation settings" \
+    THEME_REPO=local THEME_NAME=omega_lite
 ```
 
-Ces commandes suivent la documentation d'Omega. **Elles n'ont pas été exécutées
-dans cet environnement** (chaîne ARM et sous-modules absents) : considérer la
-compilation comme une étape à valider de ton côté, pas comme un résultat
-acquis.
+**Résultat obtenu** (Omega `b06f3a1`, 21 novembre 2026) : compilation et
+édition de liens réussies, `output/release/simulator/linux/epsilon.bin`
+produit, les 14 objets du module `custom_colors` compilés. La machine de test
+n'avait ni droits root ni en-têtes de développement ; `freetype`, `libpng` et
+les en-têtes X11/jpeg ont été construits ou extraits sous `/tmp`, puis exposés
+par `CPATH`, `LIBRARY_PATH`, `PKG_CONFIG_PATH` et `LD_LIBRARY_PATH`. Aucun
+fichier d'Omega n'a été modifié pour cela.
+
+La compilation **ARM** n'a pas été faite (chaîne `arm-none-eabi` absente) :
+aucune image `.dfu` n'existe dans ce dépôt.
 
 ## 4. Tests
 
@@ -78,9 +91,9 @@ Vérification syntaxique contre les en-têtes d'Omega (sans chaîne ARM) :
 scripts/check_omega_syntax.sh ../Omega
 ```
 
-C'est cette commande qui a validé les 13 sources du module contre les en-têtes
-réels (`escher`, `kandinsky`, `ion`, `poincare`) et un `palette.h` généré par
-Omega à partir du thème du projet.
+C'est cette commande qui a validé les 14 sources du module contre les en-têtes
+réels (`escher`, `kandinsky`, `ion`, `poincare`), en C++11, avec le `palette.h`
+runtime généré depuis le thème du projet.
 
 ## 5. Modifier le thème
 
@@ -121,9 +134,11 @@ valeur du thème).
 
 ## 8. Conventions
 
-- C++17, style Epsilon/Omega : deux espaces, accolades ouvrantes en fin de
-  ligne, `constexpr static` pour les constantes de classe, préfixe `m_` pour
-  les membres, gardes d'en-tête `OMEGA_LITE_..._H`.
+- **C++11** (norme d'Omega), style Epsilon/Omega : deux espaces, accolades
+  ouvrantes en fin de ligne, préfixe `m_` pour les membres, gardes d'en-tête
+  `OMEGA_LITE_..._H`. Une fonction `constexpr` ne peut contenir qu'un seul
+  `return` ; un membre `static constexpr` utilisé par adresse (ou indexé) exige
+  une définition hors classe.
 - Le cœur portable (`color_rgb`, `color_roles`, `color_overrides`,
   `color_scheme`, `color_store`, `color_settings`) ne doit **jamais** inclure
   escher, kandinsky ou Ion : c'est ce qui garantit qu'il reste testable sur un

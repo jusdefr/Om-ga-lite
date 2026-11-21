@@ -13,7 +13,10 @@ BUILD_DIR := ../../build/host-tests
 BINARY := $(BUILD_DIR)/custom_colors_tests
 
 WARNINGS := -Wall -Wextra -Werror -Wshadow -Wpedantic
-CXXFLAGS ?= -std=c++17 -O2 -g
+# C++11 on purpose: Omega builds with C++11, so the host tests must catch
+# anything the firmware compiler would reject (for example a constexpr function
+# with several return statements).
+CXXFLAGS ?= -std=c++11 -O2 -g
 CPPFLAGS += -I$(CUSTOM_COLORS_DIR) -I.
 
 LOCAL_SOURCES := \

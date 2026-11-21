@@ -5,6 +5,11 @@
 namespace OmegaLite {
 namespace Colors {
 
+/* C++11: a static constexpr member that is odr-used (here, passed by value to
+ * KDSize) needs an out-of-class definition. */
+constexpr KDCoordinate ColorRoleCell::k_rowHeight;
+constexpr KDCoordinate ActionCell::k_rowHeight;
+
 ColorRoleCell::ColorRoleCell() : m_label(""), m_hex{0}, m_color() {}
 
 void ColorRoleCell::setContent(const char * label, const char * hex, RgbColor color) {

@@ -129,6 +129,44 @@ TEST(RevertWithoutEditDoesNothing) {
   CHECK(fixture.scheme.color(Role::Control) == RgbColor(7, 7, 7));
 }
 
+TEST(RestoreDuringEditKeepsStorageUntilSaveOrCancel) {
+  Fixture fixture;
+  /* A saved, non default palette. */
+  fixture.scheme.setColor(Role::AccentText, RgbColor(0x12, 0x34, 0x56));
+  CHECK(fixture.settings.save());
+  const size_t savedSize = fixture.store.size();
+  CHECK(savedSize > 0);
+
+  /* Restore is only a draft change: the record must stay untouched. */
+  fixture.settings.beginEdit();
+  fixture.settings.resetToThemeDefaults();
+  CHECK(fixture.scheme.color(Role::AccentText) == k_testDefaults[roleIndex(Role::AccentText)]);
+  CHECK(fixture.store.isPresent());
+  CHECK(fixture.store.size() == savedSize);
+  CHECK(fixture.settings.hasUnsavedChanges());
+
+  /* Cancel brings the saved colors back, storage included. */
+  fixture.settings.revertEdit();
+  CHECK(fixture.scheme.color(Role::AccentText) == RgbColor(0x12, 0x34, 0x56));
+  CHECK(fixture.store.isPresent());
+  CHECK(fixture.store.size() == savedSize);
+  CHECK(fixture.settings.storedOverrideCount() == 1);
+}
+
+TEST(RestoreDuringEditThenSavePersistsTheDefaults) {
+  Fixture fixture;
+  fixture.scheme.setColor(Role::GraphCurve, RgbColor(9, 8, 7));
+  CHECK(fixture.settings.save());
+  CHECK(fixture.store.isPresent());
+
+  fixture.settings.beginEdit();
+  fixture.settings.resetToThemeDefaults();
+  CHECK(fixture.settings.save());
+  CHECK(!fixture.store.isPresent());
+  CHECK_EQ(fixture.settings.storedOverrideCount(), 0);
+  CHECK(fixture.scheme.color(Role::GraphCurve) == k_testDefaults[roleIndex(Role::GraphCurve)]);
+}
+
 TEST(PersistedBlobIsSmallEnoughForTheRecord) {
   Fixture fixture;
   for (uint8_t i = 0; i < k_numberOfRoles; i++) {

@@ -100,6 +100,12 @@ bool ColorSettings::resetToDefaults() {
   return success;
 }
 
+void ColorSettings::resetToThemeDefaults() {
+  /* Only the draft changes: Save will erase the record (no override left),
+   * Cancel will bring the previous colors back from the snapshot. */
+  m_scheme->resetToDefaults();
+}
+
 void ColorSettings::beginEdit() {
   if (!m_editing) {
     snapshot();

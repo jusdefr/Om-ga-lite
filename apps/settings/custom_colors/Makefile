@@ -17,5 +17,6 @@ app_settings_custom_colors_src = $(addprefix apps/settings/custom_colors/,\
   custom_colors_controller.cpp \
   custom_colors_runtime.cpp \
   ion_color_store.cpp \
+  palette_apply.cpp \
   preview_renderer.cpp \
 )

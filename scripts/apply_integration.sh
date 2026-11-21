@@ -27,6 +27,9 @@ cp -a "$REPO_DIR/apps/settings/custom_colors/." "$OMEGA_DIR/apps/settings/custom
 # The theme must be in the local theme folder for THEME_NAME=omega_lite.
 mkdir -p "$OMEGA_DIR/themes/themes/local"
 cp "$REPO_DIR/themes/omega_lite.json" "$OMEGA_DIR/themes/themes/local/omega_lite.json"
+# The integration patch points the palette rule at this generator.
+mkdir -p "$OMEGA_DIR/scripts"
+cp "$REPO_DIR/scripts/generate_runtime_palette.py" "$OMEGA_DIR/scripts/generate_runtime_palette.py"
 git -C "$OMEGA_DIR" apply --check "$PATCH"
 git -C "$OMEGA_DIR" apply "$PATCH"
 python3 "$REPO_DIR/scripts/add_i18n_messages.py" "$OMEGA_DIR"

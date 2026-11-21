@@ -27,7 +27,11 @@ public:
   bool load();
   /* Returns false if the record could not be written. */
   bool save();
+  /* Restores the theme palette and erases the record immediately. */
   bool resetToDefaults();
+  /* Restores the theme palette for the current edit only: storage is left
+   * untouched, so "Restore" followed by "Cancel" keeps the saved colors. */
+  void resetToThemeDefaults();
 
   void beginEdit();
   void revertEdit();

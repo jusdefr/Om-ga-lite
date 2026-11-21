@@ -6,6 +6,11 @@
 namespace OmegaLite {
 namespace Colors {
 
+/* C++11 requires a definition for static constexpr members that are odr-used,
+ * and it must appear in the enclosing namespace (not in the anonymous one). */
+constexpr const char * IonColorStore::k_recordBaseName;
+constexpr const char * IonColorStore::k_recordExtension;
+
 namespace {
 
 Ion::Storage * storage() { return Ion::Storage::sharedStorage(); }

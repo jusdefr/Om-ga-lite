@@ -5,6 +5,8 @@
 namespace OmegaLite {
 namespace Colors {
 
+constexpr int ColorEditorView::k_numberOfRows;
+
 namespace {
 
 constexpr KDCoordinate k_rowHeight = 22;

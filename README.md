@@ -30,11 +30,13 @@ matérielle, et aucune ne le fera.
 | Persistance via `Ion::Storage` | Implémenté |
 | Sauvegarde / annulation / restauration | Implémenté |
 | Thème `themes/omega_lite.json` | Validé par le moteur de thèmes d'Omega |
-| Tests hôtes C++ | **42 fonctions, 16 877 vérifications, 0 échec** |
-| Tests Python (thème, outils) | Exécutés, 0 échec |
-| Vérification syntaxique contre les en-têtes Omega | **13/13 sources, 0 erreur** |
-| Patch d'intégration Paramètres | `git apply` vérifié sur un clone propre |
-| Compilation ARM / image `.dfu` | **Non réalisée ici** (chaîne ARM + sous-modules absents) |
+| Palette dynamique, tous les écrans Omega | Implémentée (16 rôles → 102 clés) |
+| Tests hôtes C++ | **44 fonctions, 16 893 vérifications, 0 échec** |
+| Tests Python (thème, outils, palette runtime) | **38 tests, 0 échec** |
+| Vérification syntaxique contre les en-têtes Omega | **14/14 sources, C++11, 0 erreur** |
+| Patch d'intégration (18 fichiers) | Régénéré et appliqué sur un clone propre |
+| **Compilation complète du simulateur** | **Réussie** : `epsilon.bin` lié, apps `calculation` + `settings` |
+| Compilation ARM / image `.dfu` | **Non réalisée ici** (chaîne ARM absente) |
 | Installation sur N0120 | **Impossible aujourd'hui** (verrou constructeur) |
 
 ## Fonctionnalités
@@ -49,8 +51,11 @@ matérielle, et aucune ne le fera.
 - **Annulation** : rien n'est écrit avant « Enregistrer ».
 - **Persistance** : enregistrement `omegalite.clr` dans le stockage Ion, rechargé
   au démarrage (voir le format dans [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)).
-- **Restauration** : un bouton remet la palette d'origine et efface
-  l'enregistrement.
+- **Restauration** : le bouton « Restaurer » remet la palette du thème dans
+  l'aperçu (c'est un brouillon) ; « Annuler » réaffiche la palette enregistrée,
+  « Enregistrer » écrit le résultat.
+- **Palette globale** : les couleurs choisies s'appliquent à **tous** les écrans
+  d'Omega, pas seulement à la page de personnalisation.
 - **Robustesse** : enregistrement corrompu ou tronqué → retour aux couleurs du
   thème, jamais de plantage ni de valeur partielle.
 
@@ -92,7 +97,8 @@ apps/settings/custom_colors/   module C++ (cœur portable + vues escher + Ion)
   color_store.h                interface de stockage + implémentation mémoire
   color_settings.*             chargement, transaction, sauvegarde
   ion_color_store.*            enregistrement Ion « omegalite.clr »
-  custom_colors_runtime.*      palette globale + chargement au démarrage
+  custom_colors_runtime.*      chargement au démarrage
+  palette_apply.*              applique les 16 rôles à la palette Omega
   custom_colors_controller.*   page « Personnaliser les couleurs »
   color_editor_controller.*    édition d'un rôle
   color_editor_view.*          vue d'édition (aperçu intégré)
@@ -101,7 +107,7 @@ apps/settings/custom_colors/   module C++ (cœur portable + vues escher + Ion)
   palette_defaults_generated.h défauts 8 bits générés depuis le thème
 integration/                   patch des fichiers Omega + note de licence
 themes/omega_lite.json         thème au format Omega
-scripts/                       validateur, aperçu, générateur, intégration
+scripts/                       validateur, aperçu, générateurs, intégration
 tests/host/                    tests C++ sans firmware
 tests/python/                  tests du thème et des outils
 docs/                          architecture, compatibilité, développement
@@ -120,12 +126,12 @@ l'aperçu avec seuil de contraste, et compilation/exécution des tests C++ hôte
    `arm-none-eabi` et les sous-modules d'Omega ne sont pas installés. Le code a
    été vérifié contre les en-têtes réels (`scripts/check_omega_syntax.sh`), pas
    lié en firmware.
-3. **Thème appliqué aux écrans Omega Lite** : Omega fige sa palette en
-   `constexpr` (617 usages de `Palette::` dans 163 fichiers). Les pages de
-   personnalisation utilisent la palette runtime ; repeindre *tous* les écrans
-   demanderait de migrer ces usages. La méthode est décrite dans
-   [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), elle n'est pas simulée ici.
-4. **Libellés des rôles en français** dans l'interface d'édition, alors que le
+3. **Compilation ARM non testée** : le simulateur Linux a été compilé et lié
+   ici, mais `arm-none-eabi-gcc` n'est pas installé ; aucune image `.dfu` n'a
+   donc été produite ni vérifiée.
+4. **Couleurs quantifiées en RGB565** : `KDColor` stocke 16 bits. Le HEX
+   enregistré est exact, l'écran arrondit au dessin ; les paires proches
+   peuvent se confondre.
    reste de Paramètres suit la langue choisie. Seul le titre du menu est traduit
    (8 langues).
 

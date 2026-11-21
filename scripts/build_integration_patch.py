@@ -27,6 +27,38 @@ WORKSPACE = Path(__file__).resolve().parents[1]
 MODULE = WORKSPACE / "apps" / "settings" / "custom_colors"
 PATCH_PATH = WORKSPACE / "integration" / "omega_lite_settings.patch"
 
+PALETTE_CPP = '''#include <escher/palette.h>
+
+/* Definitions of the Palette members, the theme defaults and
+ * Palette::resetToThemeDefaults() are generated from the theme file by
+ * scripts/generate_runtime_palette.py. Palette members are mutable, so the
+ * whole interface follows the theme at runtime instead of at compile time. */
+#include <escher/palette_definitions.inc>
+'''
+
+# Palette members referenced from constexpr contexts in Omega. They must become
+# runtime functions, otherwise a mutable palette cannot compile.
+CONSTEXPR_PALETTE_SITES = (
+    "apps/probability/distribution_curve_view.h",
+    "apps/probability/distribution_curve_view.cpp",
+    "apps/shared/banner_view.h",
+    "apps/solver/solutions_controller.h",
+    "apps/solver/solutions_controller.cpp",
+    "apps/code/python_text_area.cpp",
+    "escher/include/escher/modal_view_empty_controller.h",
+    "escher/src/modal_view_empty_controller.cpp",
+)
+
+PYTHON_TEXT_AREA_COLORS = (
+    "CommentColor",
+    "NumberColor",
+    "KeywordColor",
+    "OperatorColor",
+    "StringColor",
+    "BackgroundColor",
+    "HighlightColor",
+)
+
 TRANSLATIONS = {
     "en": "Customize colors",
     "fr": "Personnaliser les couleurs",
@@ -66,6 +98,95 @@ def add_menu_entry(omega, name):
     path.write_text(text[:start] + new_body + text[end:], encoding="utf-8")
 
 
+def replace_once(omega, path, old, new, expected=1):
+    file = omega / path
+    text = file.read_text(encoding="utf-8")
+    count = text.count(old)
+    if count != expected:
+        raise SystemExit(f"error: {path}: expected {expected} occurrence(s) of {old!r}, found {count}")
+    file.write_text(text.replace(old, new), encoding="utf-8")
+
+
+def rewrite_identifiers(omega, path, identifiers, suffix="()"):
+    """Append suffix to bare uses of identifiers, skipping comments and calls."""
+    file = omega / path
+    lines = file.read_text(encoding="utf-8").splitlines()
+    rewritten = []
+    for line in lines:
+        if not line.lstrip().startswith("//"):
+            for identifier in identifiers:
+                line = re.sub(rf"\b{identifier}\b(?!\s*\()", f"{identifier}{suffix}", line)
+        rewritten.append(line)
+    file.write_text("\n".join(rewritten) + "\n", encoding="utf-8")
+
+
+def patch_runtime_palette(omega):
+    """Make every Palette member mutable so colors can change at runtime."""
+    (omega / "escher/src/palette.cpp").write_text(PALETTE_CPP, encoding="utf-8")
+
+    makefile = omega / "escher/Makefile"
+    text = makefile.read_text(encoding="utf-8")
+    if text.count("themes/themes_manager.py") != 2:
+        raise SystemExit("error: escher/Makefile: unexpected theme rule layout")
+    makefile.write_text(text.replace("themes/themes_manager.py",
+                                     "scripts/generate_runtime_palette.py"),
+                        encoding="utf-8")
+
+    # MicroPython's named colors must be read at call time now that Palette
+    # members are runtime variables.
+    replace_once(omega, "python/port/port.cpp",
+                 "    constexpr NamedColor pairs[] = {",
+                 "    const NamedColor pairs[] = {")
+
+    # Code syntax colors: constexpr file scope constants become accessors.
+    path = "apps/code/python_text_area.cpp"
+    text = (omega / path).read_text(encoding="utf-8")
+    for name in PYTHON_TEXT_AREA_COLORS:
+        text, count = re.subn(rf"^constexpr KDColor {name} = *Palette::(\w+);$",
+                              rf"KDColor {name}() {{ return Palette::\1; }}",
+                              text, flags=re.M)
+        if count != 1:
+            raise SystemExit(f"error: {path}: cannot rewrite {name}")
+    (omega / path).write_text(text, encoding="utf-8")
+    rewrite_identifiers(omega, path, PYTHON_TEXT_AREA_COLORS)
+
+    # Background colors held in constexpr members.
+    replace_once(omega, "apps/probability/distribution_curve_view.h",
+                 "  static constexpr KDColor k_backgroundColor = Palette::BackgroundApps;",
+                 "  static KDColor backgroundColor() { return Palette::BackgroundApps; }")
+    replace_once(omega, "apps/probability/distribution_curve_view.cpp",
+                 "constexpr KDColor DistributionCurveView::k_backgroundColor;\n", "")
+    # Two uses remain once the definition line is gone.
+    replace_once(omega, "apps/probability/distribution_curve_view.cpp",
+                 "k_backgroundColor", "backgroundColor()", expected=2)
+
+    replace_once(omega, "apps/solver/solutions_controller.h",
+                 "    constexpr static KDColor k_backgroundColor = Palette::BackgroundAppsSecondary;",
+                 "    static KDColor backgroundColor() { return Palette::BackgroundAppsSecondary; }")
+    replace_once(omega, "apps/solver/solutions_controller.h",
+                 "SolutionsController::ContentView::k_backgroundColor",
+                 "SolutionsController::ContentView::backgroundColor()")
+    replace_once(omega, "apps/solver/solutions_controller.cpp",
+                 "constexpr KDColor SolutionsController::ContentView::k_backgroundColor;\n", "")
+    replace_once(omega, "apps/solver/solutions_controller.cpp",
+                 "k_backgroundColor", "backgroundColor()", expected=4)
+
+    replace_once(omega, "escher/include/escher/modal_view_empty_controller.h",
+                 "    constexpr static KDColor k_backgroundColor = Palette::WallScreen;",
+                 "    static KDColor backgroundColor() { return Palette::WallScreen; }")
+    replace_once(omega, "escher/src/modal_view_empty_controller.cpp",
+                 "constexpr KDColor ModalViewEmptyController::ModalViewEmptyView::k_backgroundColor;\n", "")
+    replace_once(omega, "escher/src/modal_view_empty_controller.cpp",
+                 "k_backgroundColor", "backgroundColor()", expected=2)
+
+    replace_once(omega, "apps/shared/banner_view.h",
+                 "  static constexpr KDColor TextColor() { return Palette::PrimaryText; }",
+                 "  static KDColor TextColor() { return Palette::PrimaryText; }")
+    replace_once(omega, "apps/shared/banner_view.h",
+                 "  static constexpr KDColor BackgroundColor() { return Palette::SubMenuBackground; }",
+                 "  static KDColor BackgroundColor() { return Palette::SubMenuBackground; }")
+
+
 def patch(omega, write_patch):
     if not (omega / "apps" / "settings").is_dir():
         raise SystemExit(f"error: {omega} does not look like an Omega checkout")
@@ -74,6 +195,15 @@ def patch(omega, write_patch):
     if target.exists():
         shutil.rmtree(target)
     shutil.copytree(MODULE, target, ignore=shutil.ignore_patterns("*.o", "Makefile.bak"))
+    # The patched escher/Makefile calls this generator for palette.h.
+    (omega / "scripts").mkdir(exist_ok=True)
+    shutil.copy2(WORKSPACE / "scripts" / "generate_runtime_palette.py",
+                 omega / "scripts" / "generate_runtime_palette.py")
+    # THEME_NAME=omega_lite resolves to this local theme folder.
+    local_themes = omega / "themes" / "themes" / "local"
+    local_themes.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(WORKSPACE / "themes" / "omega_lite.json",
+                 local_themes / "omega_lite.json")
 
     edit(omega, "apps/settings/Makefile", [
         ("apps += Settings::App\n",
@@ -125,10 +255,12 @@ def patch(omega, write_patch):
          "  OmegaLite::Colors::loadAtStartup();\n"),
     ])
 
+    patch_runtime_palette(omega)
+
     if write_patch:
         diff = subprocess.run(
-            ["git", "-C", str(omega), "diff", "--", "apps", "themes",
-             ":(exclude)apps/settings/base.*.i18n"],
+            ["git", "-C", str(omega), "diff", "--", "apps", "escher", "python",
+             "themes", ":(exclude)apps/settings/base.*.i18n"],
             check=True, capture_output=True, text=True,
         ).stdout
         PATCH_PATH.parent.mkdir(parents=True, exist_ok=True)

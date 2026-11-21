@@ -22,14 +22,11 @@ BUILD_DIR="$REPO_DIR/build/omega-syntax"
 
 mkdir -p "$BUILD_DIR/escher" "$BUILD_DIR/apps"
 
-# Omega's theme engine turns the theme into Palette:: constants.
-if [ -f "$OMEGA_DIR/themes/themes_manager.py" ]; then
-    python3 "$OMEGA_DIR/themes/themes_manager.py" local omega_lite \
-        "$BUILD_DIR/escher/palette.h" "$BUILD_DIR" >/dev/null
-else
-    echo "error: $OMEGA_DIR/themes/themes_manager.py not found" >&2
-    exit 2
-fi
+# Generate the runtime palette (mutable Palette members + definitions) from the
+# theme, exactly as the patched build does.
+python3 "$REPO_DIR/scripts/generate_runtime_palette.py" local omega_lite \
+    "$BUILD_DIR/escher/palette.h" "$BUILD_DIR" \
+    --theme-file "$REPO_DIR/themes/omega_lite.json" >/dev/null
 
 # The real apps/i18n.h is generated from every app's translation files during
 # the build. The module never uses I18n directly, so a minimal stub is enough
@@ -55,7 +52,7 @@ INCLUDES="-I$BUILD_DIR \
 
 status=0
 for source in "$REPO_DIR"/apps/settings/custom_colors/*.cpp; do
-    if g++ -fsyntax-only -std=c++17 -Wno-unused-parameter $INCLUDES "$source"; then
+    if g++ -fsyntax-only -std=c++11 -Wno-unused-parameter $INCLUDES "$source"; then
         echo "OK   $(basename "$source")"
     else
         echo "FAIL $(basename "$source")"

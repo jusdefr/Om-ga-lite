@@ -5,7 +5,9 @@ namespace Colors {
 
 namespace {
 
-constexpr int hexDigitValue(char c) {
+/* Not constexpr: Omega builds with C++11, where a constexpr function body may
+ * only contain a single return statement. */
+int hexDigitValue(char c) {
   if (c >= '0' && c <= '9') {
     return c - '0';
   }

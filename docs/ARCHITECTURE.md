@@ -8,40 +8,64 @@ trois mécanismes existants d'Omega/Epsilon :
 
 | Besoin | Mécanisme réutilisé |
 |---|---|
-| Couleurs du thème | `themes/themes_manager.py` → `Palette::` (constantes) |
+| Couleurs du thème | `scripts/generate_runtime_palette.py` → `Palette::` (variables) |
 | Persistance | `Ion::Storage` (enregistrement, pas de système de fichiers) |
 | Navigation | `ViewController`, `StackViewController`, `SelectableTableView` |
 | Rendu | `KDContext`, `KDFont`, `KDColor` (kandinsky) |
 
-## Deux palettes, volontairement
+## Une palette runtime, pour toute la calculatrice
 
-Omega fige les couleurs à la compilation : `themes_manager.py` transforme les
-clés du JSON en `constexpr static KDColor` dans `escher/palette.h`. Une valeur
-`constexpr` ne peut pas changer à l'exécution.
+Omega fige les couleurs à la compilation : `themes/themes_manager.py` transforme
+les clés du JSON en `constexpr static KDColor` dans `escher/palette.h`. Une
+valeur `constexpr` ne peut pas changer à l'exécution.
 
-Omega Lite introduit donc une **palette runtime** pour les 16 rôles
-personnalisables, et garde la palette `Palette::` comme source des valeurs par
-défaut :
+Omega Lite remplace ce générateur par `scripts/generate_runtime_palette.py`, qui
+produit deux fichiers :
+
+- `escher/palette.h` : `Palette::` devient un ensemble de `static KDColor`
+  mutables (les 102 couleurs du thème), et `ThemeDefaults` conserve les valeurs
+  du thème en `constexpr`, plus `Palette::resetToThemeDefaults()` ;
+- `escher/palette_definitions.inc`, inclus par `escher/src/palette.cpp` :
+  définitions des membres, des tableaux (`DataColor`, `DataColorLight`,
+  `AtomColor`) et de la fonction de remise à zéro.
 
 ```
 themes/omega_lite.json
         │
         ├── scripts/generate_palette_defaults.py ──► palette_defaults_generated.h
         │                                             (16 RgbColor 8 bits)
-        └── themes/themes_manager.py (Omega) ───────► escher/palette.h
-                                                      (constantes de rendu)
+        └── scripts/generate_runtime_palette.py ───► escher/palette.h + .inc
+                                                      (102 couleurs mutables)
 ```
+
+Les 16 rôles personnalisables sont projetés sur les 102 clés par
+`apps/settings/custom_colors/palette_apply.cpp`. C'est ce pont qui fait qu'un
+changement de couleur repeint **tous** les écrans Omega (menus, calculs,
+graphiques, Python, réglages), et pas seulement la page de personnalisation.
+La palette est appliquée à trois moments : au démarrage
+(`loadAtStartup()`), après « Enregistrer » et après « Annuler ».
 
 Les défauts sont lus depuis le JSON en **8 bits**, pas depuis `Palette::` :
 `KDColor` stocke du RGB565, donc relire les constantes afficherait `#081020`
 au lieu de `#0B1220`. L'utilisateur voit exactement la valeur du thème, et
 l'écran applique sa quantification au moment du dessin.
 
-**Limite assumée** : les pages Omega Lite (liste, éditeur, aperçu) dessinent avec
-la palette runtime. Les autres écrans d'Omega continuent d'utiliser `Palette::`
-(617 usages dans 163 fichiers). Les repeindre demande de remplacer ces lectures
-par la palette runtime — un travail mécanique mais massif, qui n'est pas simulé
-ici. Le projet ne prétend donc pas thémer toute la calculatrice.
+### Ce que la migration impose
+
+Omega compile en **C++11**. Rendre `Palette::` mutable casse les rares endroits
+qui exigeaient une constante de compilation ; le patch les convertit :
+
+| Fichier | Changement |
+|---|---|
+| `apps/probability/distribution_curve_view.*` | `constexpr k_backgroundColor` → `backgroundColor()` |
+| `apps/solver/solutions_controller.*` | idem pour le fond des solutions |
+| `escher/.../modal_view_empty_controller.*` | idem pour le fond vide |
+| `apps/shared/banner_view.h` | `constexpr` retiré des couleurs de bandeau |
+| `apps/code/python_text_area.cpp` | constantes de coloration → fonctions |
+| `python/port/port.cpp` | `constexpr NamedColor pairs[]` → `const`, lu à l'appel |
+
+Les tableaux de `ThemeDefaults` sont indexés par la boucle de remise à zéro :
+en C++11 cet usage exige une définition hors classe, émise dans le `.inc`.
 
 ## Chaîne de personnalisation
 
@@ -133,12 +157,18 @@ Détail du patch : [integration/README.md](../integration/README.md).
 ## Tests
 
 - **Hôte** (`tests/host`) : le cœur portable ne dépend ni d'escher ni d'Ion, il
-  se compile et s'exécute avec g++. 42 fonctions couvrent HEX/RGB, RGB565,
-  rôles, sérialisation, corruption, transactions, sauvegarde et restauration.
+  se compile (en C++11, comme le firmware) et s'exécute avec g++. 44 fonctions
+  couvrent HEX/RGB, RGB565, rôles, sérialisation, corruption, transactions,
+  sauvegarde et restauration (dont l'annulation d'une restauration).
 - **Python** (`tests/python`) : schéma du thème, cohérence entre la table C++
   des rôles et celle des outils, validation, aperçu (PNG décodé, chaque rôle
-  présent), contraste, et génération des défauts.
-- **Syntaxe** (`scripts/check_omega_syntax.sh`) : compile les 13 sources du
-  module contre les en-têtes réels d'Omega avec `palette.h` généré par Omega.
-  Cela détecte les erreurs d'API sans chaîne ARM ; ce n'est pas une image
-  firmware.
+  présent), contraste, génération des défauts. Le générateur de palette runtime
+  est testé en compilant et exécutant réellement sa sortie avec un `KDColor`
+  factice (mutabilité, remise à zéro, `nextDataColor`).
+- **Syntaxe** (`scripts/check_omega_syntax.sh`) : compile les 14 sources du
+  module contre les en-têtes réels d'Omega, en C++11, avec le `palette.h`
+  runtime. Cela détecte les erreurs d'API sans chaîne ARM ; ce n'est pas une
+  image firmware.
+- **Build complet** : le simulateur Linux a été compilé et lié avec Omega Lite
+  (`EPSILON_APPS="calculation settings"`), voir
+  [DEVELOPMENT.md](DEVELOPMENT.md).

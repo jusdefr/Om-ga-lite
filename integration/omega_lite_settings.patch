@@ -1,3 +1,137 @@
+diff --git a/apps/code/python_text_area.cpp b/apps/code/python_text_area.cpp
+index ab0615f..1dc0af8 100644
+--- a/apps/code/python_text_area.cpp
++++ b/apps/code/python_text_area.cpp
+@@ -13,22 +13,22 @@ extern "C" {
+ 
+ namespace Code {
+ 
+-constexpr KDColor CommentColor = Palette::CodeComment;
+-constexpr KDColor NumberColor =  Palette::CodeNumber;
+-constexpr KDColor KeywordColor = Palette::CodeKeyword;
++KDColor CommentColor() { return Palette::CodeComment; }
++KDColor NumberColor() { return Palette::CodeNumber; }
++KDColor KeywordColor() { return Palette::CodeKeyword; }
+ // constexpr KDColor BuiltinColor = KDColor::RGB24(0x0086B3);
+-constexpr KDColor OperatorColor = Palette::CodeOperator;
+-constexpr KDColor StringColor = Palette::CodeString;
+-constexpr KDColor BackgroundColor = Palette::CodeBackground;
+-constexpr KDColor HighlightColor = Palette::CodeBackgroundSelected;
++KDColor OperatorColor() { return Palette::CodeOperator; }
++KDColor StringColor() { return Palette::CodeString; }
++KDColor BackgroundColor() { return Palette::CodeBackground; }
++KDColor HighlightColor() { return Palette::CodeBackgroundSelected; }
+ constexpr KDColor AutocompleteColor = KDColor::RGB24(0xC6C6C6); // TODO Palette change
+ 
+ static inline KDColor TokenColor(mp_token_kind_t tokenKind) {
+   if (tokenKind == MP_TOKEN_STRING) {
+-    return StringColor;
++    return StringColor();
+   }
+   if (tokenKind == MP_TOKEN_INTEGER || tokenKind == MP_TOKEN_FLOAT_OR_IMAG) {
+-    return NumberColor;
++    return NumberColor();
+   }
+   static_assert(MP_TOKEN_ELLIPSIS + 1 == MP_TOKEN_KW_FALSE
+       && MP_TOKEN_KW_FALSE      + 1 == MP_TOKEN_KW_NONE
+@@ -68,7 +68,7 @@ static inline KDColor TokenColor(mp_token_kind_t tokenKind) {
+       && MP_TOKEN_KW_YIELD      + 1 == MP_TOKEN_OP_TILDE,
+     "MP_TOKEN order changed, so Code::PythonTextArea::TokenColor might need to change too.");
+   if (tokenKind >= MP_TOKEN_KW_FALSE && tokenKind <= MP_TOKEN_KW_YIELD) {
+-    return KeywordColor;
++    return KeywordColor();
+   }
+   static_assert(MP_TOKEN_OP_TILDE       + 1 == MP_TOKEN_OP_LESS
+       && MP_TOKEN_OP_LESS               + 1 == MP_TOKEN_OP_MORE
+@@ -120,7 +120,7 @@ static inline KDColor TokenColor(mp_token_kind_t tokenKind) {
+       || tokenKind == MP_TOKEN_DEL_EQUAL
+       || tokenKind == MP_TOKEN_DEL_MINUS_MORE)
+   {
+-    return OperatorColor;
++    return OperatorColor();
+   }
+   return Palette::CodeText;
+ }
+@@ -215,7 +215,7 @@ void PythonTextArea::ContentView::unloadSyntaxHighlighter() {
+ }
+ 
+ void PythonTextArea::ContentView::clearRect(KDContext * ctx, KDRect rect) const {
+-  ctx->fillRect(rect, BackgroundColor);
++  ctx->fillRect(rect, BackgroundColor());
+ }
+ 
+ #define LOG_DRAWING 0
+@@ -245,11 +245,11 @@ void PythonTextArea::ContentView::drawLine(KDContext * ctx, int line, const char
+         fromColumn,
+         spacesStart,
+         std::min(text + byteLength, firstNonSpace) - spacesStart,
+-        StringColor,
+-        BackgroundColor,
++        StringColor(),
++        BackgroundColor(),
+         selectionStart,
+         selectionEnd,
+-        HighlightColor);
++        HighlightColor());
+   }
+   if (UTF8Helper::CodePointIs(firstNonSpace, UCodePointNull)) {
+     return;
+@@ -275,11 +275,11 @@ void PythonTextArea::ContentView::drawLine(KDContext * ctx, int line, const char
+             UTF8Helper::GlyphOffsetAtCodePoint(text, tokenEnd),
+             tokenEnd,
+             std::min(text + byteLength, tokenFrom) - tokenEnd,
+-            StringColor,
+-            BackgroundColor,
++            StringColor(),
++            BackgroundColor(),
+             selectionStart,
+             selectionEnd,
+-            HighlightColor);
++            HighlightColor());
+       }
+       tokenLength = TokenLength(lex, tokenFrom);
+       tokenEnd = tokenFrom + tokenLength;
+@@ -293,10 +293,10 @@ void PythonTextArea::ContentView::drawLine(KDContext * ctx, int line, const char
+         tokenFrom,
+         tokenLength,
+         color,
+-        BackgroundColor,
++        BackgroundColor(),
+         selectionStart,
+         selectionEnd,
+-        HighlightColor);
++        HighlightColor());
+ 
+       mp_lexer_to_next(lex);
+       LOG_DRAW("Pop token %d\n", lex->tok_kind);
+@@ -311,11 +311,11 @@ void PythonTextArea::ContentView::drawLine(KDContext * ctx, int line, const char
+           UTF8Helper::GlyphOffsetAtCodePoint(text, tokenFrom),
+           tokenFrom,
+           text + byteLength - tokenFrom,
+-          CommentColor,
+-          BackgroundColor,
++          CommentColor(),
++          BackgroundColor(),
+           selectionStart,
+           selectionEnd,
+-          HighlightColor);
++          HighlightColor());
+     }
+ 
+     mp_lexer_free(lex);
+@@ -332,10 +332,10 @@ void PythonTextArea::ContentView::drawLine(KDContext * ctx, int line, const char
+         autocompleteStart,
+         std::min(text + byteLength, m_autocompletionEnd) - autocompleteStart,
+         AutocompleteColor,
+-        BackgroundColor,
++        BackgroundColor(),
+         nullptr,
+         nullptr,
+-        HighlightColor);
++        HighlightColor());
+   }
+ }
+ 
 diff --git a/apps/main.cpp b/apps/main.cpp
 index b73b73e..22e53b0 100644
 --- a/apps/main.cpp
@@ -20,6 +154,43 @@ index b73b73e..22e53b0 100644
  #if EPSILON_GETOPT
    for (int i=1; i<argc; i++) {
      if (argv[i][0] != '-' || argv[i][1] != '-') {
+diff --git a/apps/probability/distribution_curve_view.cpp b/apps/probability/distribution_curve_view.cpp
+index 4cf8cf4..3afd5cc 100644
+--- a/apps/probability/distribution_curve_view.cpp
++++ b/apps/probability/distribution_curve_view.cpp
+@@ -6,7 +6,6 @@ using namespace Shared;
+ 
+ namespace Probability {
+ 
+-constexpr KDColor DistributionCurveView::k_backgroundColor;
+ 
+ void DistributionCurveView::reload() {
+   CurveView::reload();
+@@ -16,9 +15,9 @@ void DistributionCurveView::reload() {
+ void DistributionCurveView::drawRect(KDContext * ctx, KDRect rect) const {
+   float lowerBound = m_calculation->lowerBound();
+   float upperBound = m_calculation->upperBound();
+-  ctx->fillRect(bounds(), k_backgroundColor);
++  ctx->fillRect(bounds(), backgroundColor());
+   drawAxis(ctx, rect, Axis::Horizontal);
+-  drawLabelsAndGraduations(ctx, rect, Axis::Horizontal, false, false, false, 0, k_backgroundColor);
++  drawLabelsAndGraduations(ctx, rect, Axis::Horizontal, false, false, false, 0, backgroundColor());
+   if (m_distribution->type() == Distribution::Type::Normal) {
+     /* Special case for the normal distribution, which has always the same curve
+      * We indicate the pixels from and to which we color under the curve, not
+diff --git a/apps/probability/distribution_curve_view.h b/apps/probability/distribution_curve_view.h
+index e1288c3..6550a38 100644
+--- a/apps/probability/distribution_curve_view.h
++++ b/apps/probability/distribution_curve_view.h
+@@ -30,7 +30,7 @@ protected:
+ private:
+   static float EvaluateAtAbscissa(float abscissa, void * model, void * context);
+   static Poincare::Coordinate2D<float> EvaluateXYAtAbscissa(float abscissa, void * model, void * context);
+-  static constexpr KDColor k_backgroundColor = Palette::BackgroundApps;
++  static KDColor backgroundColor() { return Palette::BackgroundApps; }
+   void drawStandardNormal(KDContext * ctx, KDRect rect, float colorLowerBound, float colorUpperBound) const;
+   char m_labels[k_maxNumberOfXLabels][k_labelBufferMaxSize];
+   Distribution * m_distribution;
 diff --git a/apps/settings/Makefile b/apps/settings/Makefile
 index 588b95c..85ce622 100644
 --- a/apps/settings/Makefile
@@ -129,3 +300,319 @@ index 3c74faf..95770e0 100644
  
  constexpr SettingsMessageTree s_model = SettingsMessageTree(I18n::Message::SettingsApp, s_modelMenu);
  
+diff --git a/apps/shared/banner_view.h b/apps/shared/banner_view.h
+index b1ad6e5..ba05ce6 100644
+--- a/apps/shared/banner_view.h
++++ b/apps/shared/banner_view.h
+@@ -13,8 +13,8 @@ public:
+   KDCoordinate minimalHeightForOptimalDisplayGivenWidth(KDCoordinate width) const;
+   void reload() { layoutSubviews(); }
+   static constexpr const KDFont * Font() { return KDFont::SmallFont; }
+-  static constexpr KDColor TextColor() { return Palette::PrimaryText; }
+-  static constexpr KDColor BackgroundColor() { return Palette::SubMenuBackground; }
++  static KDColor TextColor() { return Palette::PrimaryText; }
++  static KDColor BackgroundColor() { return Palette::SubMenuBackground; }
+ private:
+   static constexpr KDCoordinate LineSpacing = 2;
+   int numberOfSubviews() const override = 0;
+diff --git a/apps/solver/solutions_controller.cpp b/apps/solver/solutions_controller.cpp
+index 8e5e985..e23363a 100644
+--- a/apps/solver/solutions_controller.cpp
++++ b/apps/solver/solutions_controller.cpp
+@@ -17,21 +17,20 @@ using namespace Shared;
+ 
+ namespace Solver {
+ 
+-constexpr KDColor SolutionsController::ContentView::k_backgroundColor;
+ 
+ SolutionsController::ContentView::ContentView(SolutionsController * controller) :
+-  m_warningMessageView0(KDFont::SmallFont, I18n::Message::Default, 0.5f, 0.5f, KDColorBlack, k_backgroundColor),
+-  m_warningMessageView1(KDFont::SmallFont, I18n::Message::Default, 0.5f, 0.5f, KDColorBlack, k_backgroundColor),
++  m_warningMessageView0(KDFont::SmallFont, I18n::Message::Default, 0.5f, 0.5f, KDColorBlack, backgroundColor()),
++  m_warningMessageView1(KDFont::SmallFont, I18n::Message::Default, 0.5f, 0.5f, KDColorBlack, backgroundColor()),
+   m_selectableTableView(controller, controller, controller, controller),
+   m_displayWarningMoreSolutions(false)
+ {
+-  m_selectableTableView.setBackgroundColor(k_backgroundColor);
++  m_selectableTableView.setBackgroundColor(backgroundColor());
+   m_selectableTableView.setVerticalCellOverlap(0);
+ }
+ 
+ void SolutionsController::ContentView::drawRect(KDContext * ctx, KDRect rect) const {
+   if (m_displayWarningMoreSolutions) {
+-    ctx->fillRect(KDRect(0, 0, bounds().width(), k_topMargin), k_backgroundColor);
++    ctx->fillRect(KDRect(0, 0, bounds().width(), k_topMargin), backgroundColor());
+   }
+ }
+ 
+diff --git a/apps/solver/solutions_controller.h b/apps/solver/solutions_controller.h
+index 4fac929..5a6301d 100644
+--- a/apps/solver/solutions_controller.h
++++ b/apps/solver/solutions_controller.h
+@@ -42,7 +42,7 @@ private:
+   class ContentView : public View {
+   public:
+     constexpr static KDCoordinate k_topMargin = 50;
+-    constexpr static KDColor k_backgroundColor = Palette::BackgroundAppsSecondary;
++    static KDColor backgroundColor() { return Palette::BackgroundAppsSecondary; }
+     ContentView(SolutionsController * controller);
+     void drawRect(KDContext * ctx, KDRect rect) const override;
+     void setWarning(bool warning);
+@@ -61,7 +61,7 @@ private:
+ 
+   class MessageCell : public HighlightCell {
+   public:
+-    MessageCell() : m_messageView(KDFont::SmallFont, (I18n::Message)0, 0.0f, k_verticalAlignment, KDColorBlack, SolutionsController::ContentView::k_backgroundColor) {}
++    MessageCell() : m_messageView(KDFont::SmallFont, (I18n::Message)0, 0.0f, k_verticalAlignment, KDColorBlack, SolutionsController::ContentView::backgroundColor()) {}
+     void setBackgroundColor(KDColor color) { m_messageView.setBackgroundColor(color); }
+     void setHorizontalAlignment(float alignment) { m_messageView.setAlignment(alignment, k_verticalAlignment); }
+     void setMessage(I18n::Message message) { m_messageView.setMessage(message); }
+diff --git a/escher/Makefile b/escher/Makefile
+index a8bb849..6fa0b68 100644
+--- a/escher/Makefile
++++ b/escher/Makefile
+@@ -5,7 +5,7 @@ $(eval $(call rule_for, \
+   THEME, \
+   escher/palette.h, \
+   $(addprefix themes/themes/local/, $(addsuffix .json, $(THEME_NAME))), \
+-  $$(PYTHON) themes/themes_manager.py $(THEME_REPO) $(THEME_NAME) $$@ $(BUILD_DIR)/, \
++  $$(PYTHON) scripts/generate_runtime_palette.py $(THEME_REPO) $(THEME_NAME) $$@ $(BUILD_DIR)/, \
+   global \
+ ))
+ else
+@@ -13,7 +13,7 @@ $(eval $(call rule_for, \
+   THEME, \
+   escher/palette.h, \
+   themes/themes/git/.empty-folder, \
+-  $$(PYTHON) themes/themes_manager.py $(THEME_REPO) $(THEME_NAME) $$@ $(BUILD_DIR)/, \
++  $$(PYTHON) scripts/generate_runtime_palette.py $(THEME_REPO) $(THEME_NAME) $$@ $(BUILD_DIR)/, \
+   global \
+ ))
+ endif
+diff --git a/escher/include/escher/modal_view_empty_controller.h b/escher/include/escher/modal_view_empty_controller.h
+index cf175aa..8a8cee1 100644
+--- a/escher/include/escher/modal_view_empty_controller.h
++++ b/escher/include/escher/modal_view_empty_controller.h
+@@ -21,7 +21,7 @@ protected:
+     void drawRect(KDContext * ctx, KDRect rect) const override;
+   private:
+     constexpr static int k_expressionViewRowIndex = 2;
+-    constexpr static KDColor k_backgroundColor = Palette::WallScreen;
++    static KDColor backgroundColor() { return Palette::WallScreen; }
+     int numberOfSubviews() const override;
+     View * subviewAtIndex(int index) override;
+     void layoutSubviews(bool force = false) override;
+diff --git a/escher/src/modal_view_empty_controller.cpp b/escher/src/modal_view_empty_controller.cpp
+index 99757cf..1f605e0 100644
+--- a/escher/src/modal_view_empty_controller.cpp
++++ b/escher/src/modal_view_empty_controller.cpp
+@@ -2,7 +2,6 @@
+ #include <apps/i18n.h>
+ #include <assert.h>
+ 
+-constexpr KDColor ModalViewEmptyController::ModalViewEmptyView::k_backgroundColor;
+ 
+ // ModalViewEmptyController::ModalViewEmptyView
+ void ModalViewEmptyController::ModalViewEmptyView::initMessageViews() {
+@@ -10,7 +9,7 @@ void ModalViewEmptyController::ModalViewEmptyView::initMessageViews() {
+   for (int i = 0; i < numberOfMessageViews; i++) {
+     MessageTextView * message = messageTextViewAtIndex(i);
+     message->setFont(k_font);
+-    message->setBackgroundColor(k_backgroundColor);
++    message->setBackgroundColor(backgroundColor());
+     float verticalAlignment = 0.5f;
+     if (i == 0) {
+       verticalAlignment = 1.0f;
+@@ -29,7 +28,7 @@ void ModalViewEmptyController::ModalViewEmptyView::setMessages(I18n::Message * m
+ }
+ 
+ void ModalViewEmptyController::ModalViewEmptyView::drawRect(KDContext * ctx, KDRect rect) const {
+-  ctx->fillRect(bounds(), k_backgroundColor);
++  ctx->fillRect(bounds(), backgroundColor());
+   drawBorderOfRect(ctx, bounds(), Palette::GrayBright);
+ }
+ 
+diff --git a/escher/src/palette.cpp b/escher/src/palette.cpp
+index c774872..0369098 100644
+--- a/escher/src/palette.cpp
++++ b/escher/src/palette.cpp
+@@ -1,161 +1,7 @@
+ #include <escher/palette.h>
+-#include <assert.h>
+ 
+-constexpr KDColor Palette::PrimaryText;
+-constexpr KDColor Palette::SecondaryText; // =GREYDARK
+-constexpr KDColor Palette::AccentText;
+-constexpr KDColor Palette::BackgroundHard;
+-constexpr KDColor Palette::BackgroundApps;
+-constexpr KDColor Palette::BackgroundAppsSecondary;
+-constexpr KDColor Palette::Toolbar;
+-constexpr KDColor Palette::ToolbarText;
+-constexpr KDColor Palette::ExpressionInputBackground;
+-constexpr KDColor Palette::ExpressionInputBorder;
+-constexpr KDColor Palette::Battery;
+-constexpr KDColor Palette::BatteryInCharge;
+-constexpr KDColor Palette::BatteryLow;
+-constexpr KDColor Palette::ApproximateSignText;
+-constexpr KDColor Palette::ApproximateExpressionText;
+-constexpr KDColor Palette::ScrollBarForeground;
+-constexpr KDColor Palette::ScrollBarBackground;
+-
+-constexpr KDColor Palette::Control;
+-constexpr KDColor Palette::ControlEnabled;
+-constexpr KDColor Palette::ControlDisabled;
+-
+-constexpr KDColor Palette::CalculationBackgroundOdd;
+-constexpr KDColor Palette::CalculationBackgroundEven;
+-constexpr KDColor Palette::CalculationEmptyBox;
+-constexpr KDColor Palette::CalculationEmptyBoxNeeded;
+-constexpr KDColor Palette::CalculationTrigoAndComplexForeground;
+-
+-constexpr KDColor Palette::CodeBackground;
+-constexpr KDColor Palette::CodeBackgroundSelected;
+-constexpr KDColor Palette::CodeText;
+-constexpr KDColor Palette::CodeComment;
+-constexpr KDColor Palette::CodeNumber;
+-constexpr KDColor Palette::CodeKeyword;
+-constexpr KDColor Palette::CodeOperator;
+-constexpr KDColor Palette::CodeString;
+-constexpr KDColor Palette::CodeGutterViewBackground;
+-
+-constexpr KDColor Palette::ProbabilityCurve;
+-constexpr KDColor Palette::ProbabilityCellBorder;
+-constexpr KDColor Palette::ProbabilityHistogramBar;
+-
+-constexpr KDColor Palette::StatisticsBox;
+-constexpr KDColor Palette::StatisticsBoxVerticalLine;
+-constexpr KDColor Palette::StatisticsSelected;
+-constexpr KDColor Palette::StatisticsNotSelected;
+-
+-constexpr KDColor Palette::GraphTangent;
+-
+-constexpr KDColor Palette::SubMenuBackground;
+-constexpr KDColor Palette::SubMenuBorder;
+-constexpr KDColor Palette::SubMenuText;
+-
+-constexpr KDColor Palette::ToolboxHeaderBackground;
+-constexpr KDColor Palette::ToolboxHeaderText;
+-constexpr KDColor Palette::ToolboxHeaderBorder;
+-constexpr KDColor Palette::ToolboxBackground;
+-
+-constexpr KDColor Palette::ListCellBackground;
+-constexpr KDColor Palette::ListCellBackgroundSelected;
+-constexpr KDColor Palette::ListCellBorder;
+-
+-constexpr KDColor Palette::ButtonBackground;
+-constexpr KDColor Palette::ButtonBackgroundSelected;
+-constexpr KDColor Palette::ButtonBackgroundSelectedHighContrast;
+-constexpr KDColor Palette::ButtonBorder;
+-constexpr KDColor Palette::ButtonRowBorder;
+-constexpr KDColor Palette::ButtonBorderOut;
+-constexpr KDColor Palette::ButtonShadow;
+-constexpr KDColor Palette::ButtonText;
+-
+-constexpr KDColor Palette::TabBackground;
+-constexpr KDColor Palette::TabBackgroundSelected;
+-constexpr KDColor Palette::TabBackgroundActive;
+-constexpr KDColor Palette::TabBackgroundSelectedAndActive;
+-constexpr KDColor Palette::TabText;
+-constexpr KDColor Palette::TabTextActive;
+-
+-constexpr KDColor Palette::SubTabBackground;
+-constexpr KDColor Palette::SubTabBackgroundSelected;
+-constexpr KDColor Palette::SubTabText;
+-
+-constexpr KDColor Palette::BannerFirstBackground;
+-constexpr KDColor Palette::BannerFirstBorder;
+-constexpr KDColor Palette::BannerFirstText;
+-constexpr KDColor Palette::BannerFirstVariantBackground;
+-constexpr KDColor Palette::BannerFirstVariantBorder;
+-constexpr KDColor Palette::BannerFirstVariantText;
+-constexpr KDColor Palette::BannerSecondBackground;
+-constexpr KDColor Palette::BannerSecondBorder;
+-constexpr KDColor Palette::BannerSecondText;
+-constexpr KDColor Palette::GridPrimaryLine;
+-constexpr KDColor Palette::GridSecondaryLine;
+-
+-constexpr KDColor Palette::HomeBackground;
+-constexpr KDColor Palette::HomeCellBackground;
+-constexpr KDColor Palette::HomeCellBackgroundActive;
+-constexpr KDColor Palette::HomeCellText;
+-constexpr KDColor Palette::HomeCellTextActive;
+-constexpr KDColor Palette::HomeCellTextExternal;
+-constexpr KDColor Palette::HomeCellTextExternalActive;
+-
+-constexpr KDColor Palette::YellowDark; // Done
+-constexpr KDColor Palette::YellowLight; // Done
+-constexpr KDColor Palette::PurpleBright; // Done
+-constexpr KDColor Palette::PurpleDark; // Done
+-constexpr KDColor Palette::GrayWhite; // Done
+-constexpr KDColor Palette::GrayBright; // Done
+-constexpr KDColor Palette::GrayMiddle; // Done
+-constexpr KDColor Palette::GrayDark; // Done
+-constexpr KDColor Palette::GrayVeryDark; // Done
+-constexpr KDColor Palette::Select; // Done
+-constexpr KDColor Palette::SelectDark; // Done
+-constexpr KDColor Palette::WallScreen; // Done
+-constexpr KDColor Palette::WallScreenDark; // Done
+-constexpr KDColor Palette::SubTab; // Done
+-constexpr KDColor Palette::LowBattery; // Done
+-constexpr KDColor Palette::Red;
+-constexpr KDColor Palette::RedLight;
+-constexpr KDColor Palette::Magenta;
+-constexpr KDColor Palette::Turquoise;
+-constexpr KDColor Palette::Pink;
+-constexpr KDColor Palette::Blue;
+-constexpr KDColor Palette::BlueLight;
+-constexpr KDColor Palette::Orange;
+-constexpr KDColor Palette::Green;
+-constexpr KDColor Palette::GreenLight;
+-constexpr KDColor Palette::Brown;
+-constexpr KDColor Palette::Purple;
+-constexpr KDColor Palette::Cyan; // TODO Palette change
+-constexpr KDColor Palette::BlueishGrey; // TODO Palette change
+-constexpr KDColor Palette::DataColor[];
+-constexpr KDColor Palette::DataColorLight[];
+-
+-constexpr KDColor Palette::AtomUnknown;
+-constexpr KDColor Palette::AtomText;
+-constexpr KDColor Palette::AtomAlkaliMetal;
+-constexpr KDColor Palette::AtomAlkaliEarthMetal;
+-constexpr KDColor Palette::AtomLanthanide;
+-constexpr KDColor Palette::AtomActinide;
+-constexpr KDColor Palette::AtomTransitionMetal;
+-constexpr KDColor Palette::AtomPostTransitionMetal;
+-constexpr KDColor Palette::AtomMetalloid;
+-constexpr KDColor Palette::AtomHalogen;
+-constexpr KDColor Palette::AtomReactiveNonmetal;
+-constexpr KDColor Palette::AtomNobleGas;
+-constexpr KDColor Palette::AtomTableLines;
+-constexpr KDColor Palette::AtomBackground;
+-constexpr KDColor Palette::AtomHighlight;
+-constexpr KDColor Palette::AtomColor[];
+-
+-KDColor Palette::nextDataColor(int * colorIndex) {
+-  size_t nbOfColors = numberOfDataColors();
+-  assert(*colorIndex < nbOfColors);
+-  KDColor c = DataColor[*colorIndex];
+-  *colorIndex = (*colorIndex + 1) % nbOfColors;
+-  return c;
+-}
++/* Definitions of the Palette members, the theme defaults and
++ * Palette::resetToThemeDefaults() are generated from the theme file by
++ * scripts/generate_runtime_palette.py. Palette members are mutable, so the
++ * whole interface follows the theme at runtime instead of at compile time. */
++#include <escher/palette_definitions.inc>
+diff --git a/python/port/port.cpp b/python/port/port.cpp
+index 1f83a01..c4b2bcb 100644
+--- a/python/port/port.cpp
++++ b/python/port/port.cpp
+@@ -227,7 +227,7 @@ KDColor MicroPython::Color::Parse(mp_obj_t input, Mode mode){
+   if (mp_obj_is_str(input)) {
+     size_t l;
+     const char * color = mp_obj_str_get_data(input, &l);
+-    constexpr NamedColor pairs[] = {
++    const NamedColor pairs[] = {
+       NamedColor("blue", KDColorBlue),
+       NamedColor("b", KDColorBlue),
+       NamedColor("red", KDColorRed),

@@ -2,6 +2,8 @@
 
 #include <assert.h>
 
+#include "palette_apply.h"
+
 namespace OmegaLite {
 namespace Colors {
 
@@ -120,9 +122,10 @@ bool CustomColorsController::handleEvent(Ion::Events::Event event) {
       return true;
     }
     if (row == k_resetRow) {
-      if (m_settings->resetToDefaults()) {
-        m_saveFailed = false;
-      }
+      /* Restore is part of the edit: it must be possible to change your mind
+       * with Cancel, so nothing is written to storage here. */
+      m_settings->resetToThemeDefaults();
+      m_saveFailed = false;
       refreshRoleCells();
       refreshActionCells();
       return true;
@@ -130,6 +133,8 @@ bool CustomColorsController::handleEvent(Ion::Events::Event event) {
     if (row == k_saveRow) {
       m_saveFailed = !m_settings->save();
       if (!m_saveFailed) {
+        /* The whole interface now uses the committed palette. */
+        applySchemeToPalette(*m_settings->scheme());
         stackController()->pop();
       } else {
         refreshActionCells();
@@ -138,6 +143,8 @@ bool CustomColorsController::handleEvent(Ion::Events::Event event) {
     }
     if (row == k_cancelRow) {
       m_settings->revertEdit();
+      applySchemeToPalette(*m_settings->scheme());
+      refreshRoleCells();
       stackController()->pop();
       return true;
     }
@@ -146,6 +153,7 @@ bool CustomColorsController::handleEvent(Ion::Events::Event event) {
     /* Leaving the page without saving discards the draft. Returning false lets
      * the stack view controller pop this page. */
     m_settings->revertEdit();
+    applySchemeToPalette(*m_settings->scheme());
     return false;
   }
   return false;
