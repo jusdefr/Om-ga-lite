@@ -1,0 +1,180 @@
+#include "custom_colors_controller.h"
+
+#include <assert.h>
+#include "palette_apply.h"
+
+namespace OmegaLite {
+namespace Colors {
+
+namespace {
+
+const char * k_themeNames[6] = {
+  "Ocean",
+  "Forest",
+  "Violet",
+  "Ruby",
+  "Midnight",
+  "Sunset"
+};
+
+/* Couleurs dans l'ordre des 16 rôles de color_roles.h. */
+const RgbColor k_themes[6][k_numberOfRoles] = {
+  { // Ocean
+    RgbColor(0x0B,0x12,0x20), RgbColor(0x11,0x1A,0x2B),
+    RgbColor(0x1B,0x27,0x40), RgbColor(0xEE,0xF4,0xFF),
+    RgbColor(0x9F,0xB0,0xCC), RgbColor(0x2F,0xD3,0xC4),
+    RgbColor(0x2F,0xD3,0xC4), RgbColor(0x11,0x1A,0x2B),
+    RgbColor(0x1B,0x27,0x40), RgbColor(0x25,0x40,0x5F),
+    RgbColor(0x25,0x40,0x5F), RgbColor(0x26,0x35,0x4F),
+    RgbColor(0x2F,0xD3,0xC4), RgbColor(0x2F,0xD3,0xC4),
+    RgbColor(0x2A,0x3B,0x57), RgbColor(0x1A,0x27,0x40)
+  },
+  { // Forest
+    RgbColor(0x0D,0x1B,0x16), RgbColor(0x14,0x25,0x1D),
+    RgbColor(0x1D,0x34,0x28), RgbColor(0xF0,0xFF,0xF5),
+    RgbColor(0xA8,0xC5,0xB2), RgbColor(0x55,0xD6,0x8B),
+    RgbColor(0x55,0xD6,0x8B), RgbColor(0x14,0x25,0x1D),
+    RgbColor(0x1D,0x34,0x28), RgbColor(0x2A,0x4A,0x38),
+    RgbColor(0x31,0x5B,0x43), RgbColor(0x29,0x45,0x36),
+    RgbColor(0x55,0xD6,0x8B), RgbColor(0x55,0xD6,0x8B),
+    RgbColor(0x29,0x45,0x36), RgbColor(0x1A,0x30,0x25)
+  },
+  { // Violet
+    RgbColor(0x17,0x10,0x25), RgbColor(0x21,0x18,0x35),
+    RgbColor(0x30,0x23,0x49), RgbColor(0xF7,0xF0,0xFF),
+    RgbColor(0xC0,0xAE,0xD8), RgbColor(0xB9,0x86,0xFF),
+    RgbColor(0xB9,0x86,0xFF), RgbColor(0x21,0x18,0x35),
+    RgbColor(0x30,0x23,0x49), RgbColor(0x4A,0x35,0x69),
+    RgbColor(0x55,0x3D,0x7A), RgbColor(0x3B,0x2B,0x53),
+    RgbColor(0xB9,0x86,0xFF), RgbColor(0xB9,0x86,0xFF),
+    RgbColor(0x3B,0x2B,0x53), RgbColor(0x27,0x1D,0x3A)
+  },
+  { // Ruby
+    RgbColor(0x20,0x0D,0x13), RgbColor(0x2B,0x12,0x1B),
+    RgbColor(0x40,0x1B,0x28), RgbColor(0xFF,0xF0,0xF3),
+    RgbColor(0xD5,0xA8,0xB2), RgbColor(0xFF,0x5C,0x7A),
+    RgbColor(0xFF,0x5C,0x7A), RgbColor(0x2B,0x12,0x1B),
+    RgbColor(0x40,0x1B,0x28), RgbColor(0x62,0x29,0x3B),
+    RgbColor(0x72,0x30,0x45), RgbColor(0x4B,0x24,0x32),
+    RgbColor(0xFF,0x5C,0x7A), RgbColor(0xFF,0x5C,0x7A),
+    RgbColor(0x4B,0x24,0x32), RgbColor(0x30,0x18,0x22)
+  },
+  { // Midnight
+    RgbColor(0x12,0x14,0x18), RgbColor(0x19,0x1C,0x22),
+    RgbColor(0x25,0x29,0x32), RgbColor(0xF0,0xF2,0xF5),
+    RgbColor(0xA8,0xAE,0xB8), RgbColor(0xB8,0xC4,0xD6),
+    RgbColor(0xB8,0xC4,0xD6), RgbColor(0x19,0x1C,0x22),
+    RgbColor(0x25,0x29,0x32), RgbColor(0x38,0x3E,0x49),
+    RgbColor(0x42,0x49,0x56), RgbColor(0x32,0x37,0x40),
+    RgbColor(0xB8,0xC4,0xD6), RgbColor(0xB8,0xC4,0xD6),
+    RgbColor(0x32,0x37,0x40), RgbColor(0x22,0x26,0x2D)
+  },
+  { // Sunset
+    RgbColor(0xFF,0xF7,0xED), RgbColor(0xFF,0xF1,0xE2),
+    RgbColor(0xF8,0xE4,0xD0), RgbColor(0x3D,0x2A,0x24),
+    RgbColor(0x80,0x66,0x5A), RgbColor(0xC6,0x5D,0x3A),
+    RgbColor(0xC6,0x5D,0x3A), RgbColor(0xFF,0xF1,0xE2),
+    RgbColor(0xF1,0xD7,0xC3), RgbColor(0xE7,0xBF,0xA4),
+    RgbColor(0xEB,0xC8,0xAE), RgbColor(0xDC,0xC2,0xAE),
+    RgbColor(0xC6,0x5D,0x3A), RgbColor(0xC6,0x5D,0x3A),
+    RgbColor(0xE4,0xD1,0xC1), RgbColor(0xC9,0xAE,0x99)
+  }
+};
+
+} // namespace
+
+CustomColorsController::CustomColorsController(
+    Responder * parentResponder, ColorSettings * settings) :
+    ViewController(parentResponder),
+    m_settings(settings),
+    m_selectableTableView(this),
+    m_saveFailed(false) {
+  assert(m_settings != nullptr);
+}
+
+void CustomColorsController::didBecomeFirstResponder() {
+  if (selectedRow() < 0) {
+    selectCellAtLocation(0, 0);
+  }
+  Container::activeApp()->setFirstResponder(&m_selectableTableView);
+}
+
+void CustomColorsController::viewWillAppear() {
+  ViewController::viewWillAppear();
+  m_settings->beginEdit();
+  m_saveFailed = false;
+}
+
+KDCoordinate CustomColorsController::rowHeight(int j) {
+  return ActionCell::k_rowHeight;
+}
+
+KDCoordinate CustomColorsController::cumulatedHeightFromIndex(int j) {
+  return j * ActionCell::k_rowHeight;
+}
+
+int CustomColorsController::indexFromCumulatedHeight(KDCoordinate offsetY) {
+  int row = offsetY / ActionCell::k_rowHeight;
+  if (row < 0) return 0;
+  if (row >= k_themeCount) return k_themeCount - 1;
+  return row;
+}
+
+HighlightCell * CustomColorsController::reusableCell(int index, int type) {
+  assert(type == k_typeTheme);
+  assert(index >= 0 && index < k_themeCount);
+  return &m_themeCells[index];
+}
+
+int CustomColorsController::reusableCellCount(int type) {
+  return k_themeCount;
+}
+
+int CustomColorsController::typeAtLocation(int i, int j) {
+  return k_typeTheme;
+}
+
+void CustomColorsController::willDisplayCellForIndex(
+    HighlightCell * cell, int index) {
+  ActionCell * themeCell = static_cast<ActionCell *>(cell);
+  themeCell->setText(
+      m_saveFailed && index == selectedRow()
+          ? "Erreur d'enregistrement"
+          : k_themeNames[index]);
+}
+
+void CustomColorsController::applyTheme(int index) {
+  for (uint8_t role = 0; role < k_numberOfRoles; role++) {
+    m_settings->scheme()->setColor(
+        static_cast<Role>(role), k_themes[index][role]);
+  }
+}
+
+bool CustomColorsController::handleEvent(Ion::Events::Event event) {
+  if (event == Ion::Events::OK || event == Ion::Events::EXE) {
+    const int row = selectedRow();
+    if (row >= 0 && row < k_themeCount) {
+      applyTheme(row);
+      m_saveFailed = !m_settings->save();
+
+      if (!m_saveFailed) {
+        applySchemeToPalette(*m_settings->scheme());
+        stackController()->pop();
+      } else {
+        m_selectableTableView.reloadCellAtLocation(0, row);
+      }
+      return true;
+    }
+  }
+
+  if (event == Ion::Events::Back) {
+    m_settings->revertEdit();
+    applySchemeToPalette(*m_settings->scheme());
+    return false;
+  }
+
+  return false;
+}
+
+} // namespace Colors
+} // namespace OmegaLite

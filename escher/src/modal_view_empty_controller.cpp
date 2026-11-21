@@ -2,7 +2,6 @@
 #include <apps/i18n.h>
 #include <assert.h>
 
-constexpr KDColor ModalViewEmptyController::ModalViewEmptyView::k_backgroundColor;
 
 // ModalViewEmptyController::ModalViewEmptyView
 void ModalViewEmptyController::ModalViewEmptyView::initMessageViews() {
@@ -10,7 +9,7 @@ void ModalViewEmptyController::ModalViewEmptyView::initMessageViews() {
   for (int i = 0; i < numberOfMessageViews; i++) {
     MessageTextView * message = messageTextViewAtIndex(i);
     message->setFont(k_font);
-    message->setBackgroundColor(k_backgroundColor);
+    message->setBackgroundColor(backgroundColor());
     float verticalAlignment = 0.5f;
     if (i == 0) {
       verticalAlignment = 1.0f;
@@ -29,7 +28,7 @@ void ModalViewEmptyController::ModalViewEmptyView::setMessages(I18n::Message * m
 }
 
 void ModalViewEmptyController::ModalViewEmptyView::drawRect(KDContext * ctx, KDRect rect) const {
-  ctx->fillRect(bounds(), k_backgroundColor);
+  ctx->fillRect(bounds(), backgroundColor());
   drawBorderOfRect(ctx, bounds(), Palette::GrayBright);
 }
 

@@ -11,6 +11,8 @@
 #include "sub_menu/localization_controller.h"
 #include "sub_menu/math_options_controller.h"
 #include "sub_menu/preferences_controller.h"
+#include "custom_colors/custom_colors_controller.h"
+#include "custom_colors/custom_colors_runtime.h"
 
 namespace Settings {
 
@@ -73,6 +75,7 @@ private:
   ExamModeController m_examModeController;
   AboutController m_aboutController;
   PreferencesController m_preferencesController;
+  OmegaLite::Colors::CustomColorsController m_customColorsController;
 };
 
 }

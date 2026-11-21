@@ -1,6 +1,7 @@
 #include "apps_container.h"
 #include "global_preferences.h"
 #include <poincare/init.h>
+#include "settings/custom_colors/custom_colors_runtime.h"
 
 #define DUMMY_MAIN 0
 #if DUMMY_MAIN
@@ -27,6 +28,9 @@ void ion_main(int argc, const char * const argv[]) {
 
   // Initialize Poincare::TreePool::sharedPool
   Poincare::Init();
+
+  /* Omega Lite: apply the saved color palette before the first frame. */
+  OmegaLite::Colors::loadAtStartup();
 
 #if EPSILON_GETOPT
   for (int i=1; i<argc; i++) {

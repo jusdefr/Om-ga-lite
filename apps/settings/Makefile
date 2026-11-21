@@ -1,4 +1,6 @@
 apps += Settings::App
+
+include apps/settings/custom_colors/Makefile
 app_headers += apps/settings/app.h
 
 app_settings_src = $(addprefix apps/settings/,\
@@ -29,6 +31,7 @@ app_settings_src = $(addprefix apps/settings/,\
 SFLAGS += -DOMEGA_STATE="$(OMEGA_STATE)"
 
 app_settings_src += $(app_settings_test_src)
+app_settings_src += $(app_settings_custom_colors_src)
 apps_src += $(app_settings_src)
 
 i18n_files += $(call i18n_without_universal_for,settings/base)

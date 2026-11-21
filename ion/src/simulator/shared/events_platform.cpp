@@ -142,10 +142,17 @@ Event getPlatformEvent() {
     }
     if (event.type == SDL_KEYDOWN) {
       if (Simulator::Keyboard::scanHandlesSDLKey(event.key.keysym.scancode)) {
-        continue;
+        Simulator::Keyboard::keyDownFromSDL(event.key.keysym.scancode);
+        break;
       }
       result = eventFromSDLKeyboardEvent(event.key);
       break;
+    }
+    if (event.type == SDL_KEYUP) {
+      if (Simulator::Keyboard::scanHandlesSDLKey(event.key.keysym.scancode)) {
+        Simulator::Keyboard::keyUpFromSDL(event.key.keysym.scancode);
+        continue;
+      }
     }
     if (event.type == SDL_TEXTINPUT) {
       result = eventFromSDLTextInputEvent(event.text);

@@ -33,7 +33,8 @@ MainController::MainController(Responder * parentResponder, InputEventHandlerDel
   m_dateTimeController(this),
   m_examModeController(this),
   m_aboutController(this),
-  m_preferencesController(this)
+  m_preferencesController(this),
+  m_customColorsController(this, &OmegaLite::Colors::settings())
 {
   for (int i = 0; i < k_numberOfSimpleChevronCells; i++) {
     m_cells[i].setMessageFont(KDFont::LargeFont);
@@ -89,6 +90,12 @@ bool MainController::handleEvent(Ion::Events::Event event) {
     }
   }
   if (event == Ion::Events::OK || event == Ion::Events::EXE || event == Ion::Events::Right) {
+    if (model()->childAtIndex(selectedRow())->label() == I18n::Message::CustomColors) {
+      /* Omega Lite: the color page is not a SettingsMessageTree based
+       * sub controller, it owns its view and its storage. */
+      stackController()->push(&m_customColorsController);
+      return true;
+    }
     GenericSubController * subController = nullptr;
     I18n::Message title = model()->childAtIndex(selectedRow())->label();
     if (title == I18n::Message::Brightness || title == I18n::Message::Language) {

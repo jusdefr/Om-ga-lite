@@ -99,6 +99,24 @@ bool scanHandlesSDLKey(SDL_Scancode key) {
   return false;
 }
 
+void keyDownFromSDL(SDL_Scancode key) {
+  for (int i = 0; i < sNumberOfKeyPairs; i++) {
+    if (key == sKeyPairs[i].SDLKey()) {
+      keyDown(sKeyPairs[i].key());
+      return;
+    }
+  }
+}
+
+void keyUpFromSDL(SDL_Scancode key) {
+  for (int i = 0; i < sNumberOfKeyPairs; i++) {
+    if (key == sKeyPairs[i].SDLKey()) {
+      keyUp(sKeyPairs[i].key());
+      return;
+    }
+  }
+}
+
 }
 }
 }

@@ -11,6 +11,8 @@ namespace Keyboard {
 void keyDown(Ion::Keyboard::Key k);
 void keyUp(Ion::Keyboard::Key k);
 bool scanHandlesSDLKey(SDL_Scancode key);
+void keyDownFromSDL(SDL_Scancode key);
+void keyUpFromSDL(SDL_Scancode key);
 void didScan();
 
 }

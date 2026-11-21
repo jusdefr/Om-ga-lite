@@ -16,7 +16,8 @@ constexpr SettingsMessageTree s_modelMenu[] =
     SettingsMessageTree(I18n::Message::ExamMode, ExamModeConfiguration::s_modelExamChildren),
     SettingsMessageTree(I18n::Message::UpdatePopUp),
     SettingsMessageTree(I18n::Message::Accessibility, s_accessibilityChildren),
-    SettingsMessageTree(I18n::Message::About, s_modelAboutChildren)};
+    SettingsMessageTree(I18n::Message::About, s_modelAboutChildren),
+    SettingsMessageTree(I18n::Message::CustomColors)};
 
 constexpr SettingsMessageTree s_model = SettingsMessageTree(I18n::Message::SettingsApp, s_modelMenu);
 
