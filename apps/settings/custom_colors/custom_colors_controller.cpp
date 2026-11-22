@@ -1,6 +1,7 @@
 #include "custom_colors_controller.h"
 
 #include <assert.h>
+
 #include "palette_apply.h"
 
 namespace OmegaLite {
@@ -8,86 +9,18 @@ namespace Colors {
 
 namespace {
 
-const char * k_themeNames[6] = {
-  "Ocean",
-  "Forest",
-  "Violet",
-  "Ruby",
-  "Midnight",
-  "Sunset"
-};
-
-/* Couleurs dans l'ordre des 16 rôles de color_roles.h. */
-const RgbColor k_themes[6][k_numberOfRoles] = {
-  { // Ocean
-    RgbColor(0x0B,0x12,0x20), RgbColor(0x11,0x1A,0x2B),
-    RgbColor(0x1B,0x27,0x40), RgbColor(0xEE,0xF4,0xFF),
-    RgbColor(0x9F,0xB0,0xCC), RgbColor(0x2F,0xD3,0xC4),
-    RgbColor(0x2F,0xD3,0xC4), RgbColor(0x11,0x1A,0x2B),
-    RgbColor(0x1B,0x27,0x40), RgbColor(0x25,0x40,0x5F),
-    RgbColor(0x25,0x40,0x5F), RgbColor(0x26,0x35,0x4F),
-    RgbColor(0x2F,0xD3,0xC4), RgbColor(0x2F,0xD3,0xC4),
-    RgbColor(0x2A,0x3B,0x57), RgbColor(0x1A,0x27,0x40)
-  },
-  { // Forest
-    RgbColor(0x0D,0x1B,0x16), RgbColor(0x14,0x25,0x1D),
-    RgbColor(0x1D,0x34,0x28), RgbColor(0xF0,0xFF,0xF5),
-    RgbColor(0xA8,0xC5,0xB2), RgbColor(0x55,0xD6,0x8B),
-    RgbColor(0x55,0xD6,0x8B), RgbColor(0x14,0x25,0x1D),
-    RgbColor(0x1D,0x34,0x28), RgbColor(0x2A,0x4A,0x38),
-    RgbColor(0x31,0x5B,0x43), RgbColor(0x29,0x45,0x36),
-    RgbColor(0x55,0xD6,0x8B), RgbColor(0x55,0xD6,0x8B),
-    RgbColor(0x29,0x45,0x36), RgbColor(0x1A,0x30,0x25)
-  },
-  { // Violet
-    RgbColor(0x17,0x10,0x25), RgbColor(0x21,0x18,0x35),
-    RgbColor(0x30,0x23,0x49), RgbColor(0xF7,0xF0,0xFF),
-    RgbColor(0xC0,0xAE,0xD8), RgbColor(0xB9,0x86,0xFF),
-    RgbColor(0xB9,0x86,0xFF), RgbColor(0x21,0x18,0x35),
-    RgbColor(0x30,0x23,0x49), RgbColor(0x4A,0x35,0x69),
-    RgbColor(0x55,0x3D,0x7A), RgbColor(0x3B,0x2B,0x53),
-    RgbColor(0xB9,0x86,0xFF), RgbColor(0xB9,0x86,0xFF),
-    RgbColor(0x3B,0x2B,0x53), RgbColor(0x27,0x1D,0x3A)
-  },
-  { // Ruby
-    RgbColor(0x20,0x0D,0x13), RgbColor(0x2B,0x12,0x1B),
-    RgbColor(0x40,0x1B,0x28), RgbColor(0xFF,0xF0,0xF3),
-    RgbColor(0xD5,0xA8,0xB2), RgbColor(0xFF,0x5C,0x7A),
-    RgbColor(0xFF,0x5C,0x7A), RgbColor(0x2B,0x12,0x1B),
-    RgbColor(0x40,0x1B,0x28), RgbColor(0x62,0x29,0x3B),
-    RgbColor(0x72,0x30,0x45), RgbColor(0x4B,0x24,0x32),
-    RgbColor(0xFF,0x5C,0x7A), RgbColor(0xFF,0x5C,0x7A),
-    RgbColor(0x4B,0x24,0x32), RgbColor(0x30,0x18,0x22)
-  },
-  { // Midnight
-    RgbColor(0x12,0x14,0x18), RgbColor(0x19,0x1C,0x22),
-    RgbColor(0x25,0x29,0x32), RgbColor(0xF0,0xF2,0xF5),
-    RgbColor(0xA8,0xAE,0xB8), RgbColor(0xB8,0xC4,0xD6),
-    RgbColor(0xB8,0xC4,0xD6), RgbColor(0x19,0x1C,0x22),
-    RgbColor(0x25,0x29,0x32), RgbColor(0x38,0x3E,0x49),
-    RgbColor(0x42,0x49,0x56), RgbColor(0x32,0x37,0x40),
-    RgbColor(0xB8,0xC4,0xD6), RgbColor(0xB8,0xC4,0xD6),
-    RgbColor(0x32,0x37,0x40), RgbColor(0x22,0x26,0x2D)
-  },
-  { // Sunset
-    RgbColor(0xFF,0xF7,0xED), RgbColor(0xFF,0xF1,0xE2),
-    RgbColor(0xF8,0xE4,0xD0), RgbColor(0x3D,0x2A,0x24),
-    RgbColor(0x80,0x66,0x5A), RgbColor(0xC6,0x5D,0x3A),
-    RgbColor(0xC6,0x5D,0x3A), RgbColor(0xFF,0xF1,0xE2),
-    RgbColor(0xF1,0xD7,0xC3), RgbColor(0xE7,0xBF,0xA4),
-    RgbColor(0xEB,0xC8,0xAE), RgbColor(0xDC,0xC2,0xAE),
-    RgbColor(0xC6,0x5D,0x3A), RgbColor(0xC6,0x5D,0x3A),
-    RgbColor(0xE4,0xD1,0xC1), RgbColor(0xC9,0xAE,0x99)
-  }
-};
+constexpr const char * k_resetText = "Restaurer les couleurs d'origine";
+constexpr const char * k_saveText = "Enregistrer";
+constexpr const char * k_cancelText = "Annuler";
+constexpr const char * k_saveFailedText = "Echec de l'enregistrement";
 
 } // namespace
 
-CustomColorsController::CustomColorsController(
-    Responder * parentResponder, ColorSettings * settings) :
+CustomColorsController::CustomColorsController(Responder * parentResponder, ColorSettings * settings) :
     ViewController(parentResponder),
     m_settings(settings),
     m_selectableTableView(this),
+    m_editorController(this, settings),
     m_saveFailed(false) {
   assert(m_settings != nullptr);
 }
@@ -101,78 +34,128 @@ void CustomColorsController::didBecomeFirstResponder() {
 
 void CustomColorsController::viewWillAppear() {
   ViewController::viewWillAppear();
+  /* The page is the transaction: nothing is written until Save. */
   m_settings->beginEdit();
-  m_saveFailed = false;
+  refreshRoleCells();
+  refreshActionCells();
 }
 
 KDCoordinate CustomColorsController::rowHeight(int j) {
-  return ActionCell::k_rowHeight;
+  return j < k_numberOfRoles ? ColorRoleCell::k_rowHeight : ActionCell::k_rowHeight;
 }
 
 KDCoordinate CustomColorsController::cumulatedHeightFromIndex(int j) {
-  return j * ActionCell::k_rowHeight;
+  KDCoordinate height = 0;
+  for (int row = 0; row < j; row++) {
+    height += rowHeight(row);
+  }
+  return height;
 }
 
 int CustomColorsController::indexFromCumulatedHeight(KDCoordinate offsetY) {
-  int row = offsetY / ActionCell::k_rowHeight;
-  if (row < 0) return 0;
-  if (row >= k_themeCount) return k_themeCount - 1;
-  return row;
+  KDCoordinate height = 0;
+  for (int row = 0; row < numberOfRows(); row++) {
+    const KDCoordinate rowH = rowHeight(row);
+    if (offsetY < height + rowH) {
+      return row;
+    }
+    height += rowH;
+  }
+  return numberOfRows() - 1;
 }
 
 HighlightCell * CustomColorsController::reusableCell(int index, int type) {
-  assert(type == k_typeTheme);
-  assert(index >= 0 && index < k_themeCount);
-  return &m_themeCells[index];
+  if (type == k_typeRole) {
+    assert(index >= 0 && index < k_numberOfRoles);
+    return &m_roleCells[index];
+  }
+  assert(type == k_typeAction);
+  assert(index >= 0 && index < k_actionCount);
+  return &m_actionCells[index];
 }
 
 int CustomColorsController::reusableCellCount(int type) {
-  return k_themeCount;
+  return type == k_typeRole ? k_numberOfRoles : k_actionCount;
 }
 
 int CustomColorsController::typeAtLocation(int i, int j) {
-  return k_typeTheme;
+  return j < k_numberOfRoles ? k_typeRole : k_typeAction;
 }
 
-void CustomColorsController::willDisplayCellForIndex(
-    HighlightCell * cell, int index) {
-  ActionCell * themeCell = static_cast<ActionCell *>(cell);
-  themeCell->setText(
-      m_saveFailed && index == selectedRow()
-          ? "Erreur d'enregistrement"
-          : k_themeNames[index]);
+void CustomColorsController::willDisplayCellForIndex(HighlightCell * cell, int index) {
+  if (index < k_numberOfRoles) {
+    const Role role = static_cast<Role>(index);
+    char hex[k_hexColorTextSize];
+    writeHex(m_settings->scheme()->color(role), hex, sizeof(hex));
+    static_cast<ColorRoleCell *>(cell)->setContent(roleLabel(role), hex,
+                                                   m_settings->scheme()->color(role));
+    return;
+  }
+  ActionCell * actionCell = static_cast<ActionCell *>(cell);
+  if (index == k_resetRow) {
+    actionCell->setText(k_resetText);
+  } else if (index == k_saveRow) {
+    actionCell->setText(m_saveFailed ? k_saveFailedText : k_saveText);
+  } else {
+    actionCell->setText(k_cancelText);
+  }
 }
 
-void CustomColorsController::applyTheme(int index) {
-  for (uint8_t role = 0; role < k_numberOfRoles; role++) {
-    m_settings->scheme()->setColor(
-        static_cast<Role>(role), k_themes[index][role]);
+void CustomColorsController::refreshRoleCells() {
+  for (int row = 0; row < k_numberOfRoles; row++) {
+    m_selectableTableView.reloadCellAtLocation(0, row);
+  }
+}
+
+void CustomColorsController::refreshActionCells() {
+  for (int row = k_resetRow; row < numberOfRows(); row++) {
+    m_selectableTableView.reloadCellAtLocation(0, row);
   }
 }
 
 bool CustomColorsController::handleEvent(Ion::Events::Event event) {
   if (event == Ion::Events::OK || event == Ion::Events::EXE) {
     const int row = selectedRow();
-    if (row >= 0 && row < k_themeCount) {
-      applyTheme(row);
+    if (row >= 0 && row < k_numberOfRoles) {
+      m_editorController.setRole(static_cast<Role>(row));
+      stackController()->push(&m_editorController);
+      return true;
+    }
+    if (row == k_resetRow) {
+      /* Restore is part of the edit: it must be possible to change your mind
+       * with Cancel, so nothing is written to storage here. */
+      m_settings->resetToThemeDefaults();
+      m_saveFailed = false;
+      refreshRoleCells();
+      refreshActionCells();
+      return true;
+    }
+    if (row == k_saveRow) {
       m_saveFailed = !m_settings->save();
-
       if (!m_saveFailed) {
+        /* The whole interface now uses the committed palette. */
         applySchemeToPalette(*m_settings->scheme());
         stackController()->pop();
       } else {
-        m_selectableTableView.reloadCellAtLocation(0, row);
+        refreshActionCells();
       }
       return true;
     }
+    if (row == k_cancelRow) {
+      m_settings->revertEdit();
+      applySchemeToPalette(*m_settings->scheme());
+      refreshRoleCells();
+      stackController()->pop();
+      return true;
+    }
   }
-
   if (event == Ion::Events::Back) {
+    /* Leaving the page without saving discards the draft. Returning false lets
+     * the stack view controller pop this page. */
     m_settings->revertEdit();
     applySchemeToPalette(*m_settings->scheme());
     return false;
   }
-
   return false;
 }
 
